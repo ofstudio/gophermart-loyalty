@@ -42,15 +42,17 @@ CREATE TABLE promos
     code        VARCHAR(64)    NOT NULL,
     description VARCHAR(256)   NOT NULL,
     reward      DECIMAL(16, 4) NOT NULL,
-    valid_until TIMESTAMP      NOT NULL,
+    not_before  TIMESTAMP      NOT NULL,
+    not_after   TIMESTAMP      NOT NULL,
     created_at  TIMESTAMP      NOT NULL DEFAULT now(),
     CONSTRAINT promo_code_unique UNIQUE (code),
-    CONSTRAINT promo_reward_positive CHECK ( reward > 0 )
+    CONSTRAINT promo_reward_positive CHECK ( reward > 0 ),
+    CONSTRAINT promo_valid_period CHECK ( not_before < not_after )
 );
 
-INSERT INTO promos (code, description, reward, valid_until)
-VALUES ('WELCOME-GOPHER', 'Приветственный бонус', 20, '2025-01-01'),
-       ('GOLANG-2021', 'В честь дня рождения Go', 10, '2021-10-11');
+INSERT INTO promos (code, description, reward, not_before, not_after)
+VALUES ('WELCOME-GOPHER', 'Приветственный бонус', 20, '2020-01-01', '2025-01-01'),
+       ('GOLANG-2021', 'В честь дня рождения Go', 10, '2021-10-10', '2021-10-11');
 
 -- Операции
 CREATE TABLE operations

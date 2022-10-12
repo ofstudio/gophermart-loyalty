@@ -4,9 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"gophermart-loyalty/internal/errs"
+	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/models"
-	"gophermart-loyalty/internal/repo/constraint"
 )
 
 // stmtOperationCreate - создает операцию.
@@ -28,7 +27,7 @@ var stmtOperationCreate = registerStmt(`
 
 // OperationCreate - создает операцию и обновляет баланс пользователя.
 func (r *Repo) OperationCreate(ctx context.Context, op *models.Operation) error {
-	log := r.log.WithRequestID(ctx).With().
+	log := r.log.WithReqID(ctx).With().
 		Uint64("user_id", op.UserID).
 		Str("type", string(op.Type)).
 		Logger()
@@ -36,13 +35,16 @@ func (r *Repo) OperationCreate(ctx context.Context, op *models.Operation) error 
 	tx, err := r.db.Begin()
 	if err != nil {
 		log.Error().Err(err).Msg("failed to begin transaction")
-		return errs.Internal
+		return r.appError(err).WithReqID(ctx)
 	}
 	//goland:noinspection ALL
 	defer tx.Rollback()
 
 	// Блокируем запись пользователя для обновления
 	if err = r.userLockTx(ctx, tx, op.UserID); err != nil {
+		if errors.Is(err, app.ErrNotFound) {
+			err = app.ErrOperationUserNotExists.WithReqID(ctx)
+		}
 		return err
 	}
 
@@ -50,11 +52,9 @@ func (r *Repo) OperationCreate(ctx context.Context, op *models.Operation) error 
 	err = tx.Stmt(r.stmts[stmtOperationCreate]).
 		QueryRowContext(ctx, op.UserID, op.Type, op.Status, op.Amount, op.Description, op.OrderNumber, op.PromoID).
 		Scan(&op.ID, &op.CreatedAt, &op.UpdatedAt)
-	if c, ok := constraint.Violated(err); ok {
-		return r.constraintErr(ctx, c)
-	} else if err != nil {
+	if err != nil {
 		log.Error().Err(err).Msg("failed to create operation")
-		return errs.Internal
+		return r.appError(err).WithReqID(ctx)
 	}
 
 	// Обновляем баланс пользователя
@@ -64,7 +64,7 @@ func (r *Repo) OperationCreate(ctx context.Context, op *models.Operation) error 
 
 	if err = tx.Commit(); err != nil {
 		log.Error().Err(err).Msg("failed to commit transaction")
-		return errs.Internal
+		return r.appError(err).WithReqID(ctx)
 	}
 
 	log.Debug().Msg("operation created")
@@ -72,8 +72,6 @@ func (r *Repo) OperationCreate(ctx context.Context, op *models.Operation) error 
 }
 
 type updateFunc func(ctx context.Context, operation *models.Operation) error
-
-var NoFurtherOperations = errors.New("no further operations")
 
 // stmtOperationLockFurther - ищет операцию самую старую операцию заданного типа,
 // которая находится не в конечном статусе, и блокирует ее для обновления другими транзакциями.
@@ -103,12 +101,12 @@ var stmtOperationUpdate = registerStmt(`
 // которая находится не в конечном статусе, вызывает для нее коллбэк updateOp, обновляет операцию
 // и обновляет баланс пользователя.
 func (r *Repo) OperationUpdateFurther(ctx context.Context, opType models.OperationType, updateOp updateFunc) error {
-	log := r.log.WithRequestID(ctx)
+	log := r.log.WithReqID(ctx)
 
 	tx, err := r.db.Begin()
 	if err != nil {
 		log.Error().Err(err).Msg("failed to begin transaction")
-		return errs.Internal
+		return r.appError(err).WithReqID(ctx)
 	}
 	//goland:noinspection ALL
 	defer tx.Rollback()
@@ -120,10 +118,10 @@ func (r *Repo) OperationUpdateFurther(ctx context.Context, opType models.Operati
 		Scan(&op.ID, &op.UserID, &op.Type, &op.Status, &op.Amount, &op.Description, &op.OrderNumber, &op.PromoID)
 	if err == sql.ErrNoRows {
 		log.Debug().Msg("no further operations to update")
-		return NoFurtherOperations
+		return app.ErrNotFound.WithReqID(ctx)
 	} else if err != nil {
 		log.Error().Err(err).Msg("failed to lock further operation")
-		return errs.Internal
+		return r.appError(err).WithReqID(ctx)
 	}
 
 	// Вызываем коллбэк для обновления данных операции
@@ -133,18 +131,16 @@ func (r *Repo) OperationUpdateFurther(ctx context.Context, opType models.Operati
 
 	// Блокируем запись пользователя для обновления
 	if err = r.userLockTx(ctx, tx, op.UserID); err != nil {
-		return err
+		return r.appError(err).WithReqID(ctx)
 	}
 
 	// Обновляем операцию
 	err = tx.Stmt(r.stmts[stmtOperationUpdate]).
 		QueryRowContext(ctx, op.ID, op.Status, op.Amount).
 		Scan(&sql.NullInt64{})
-	if c, ok := constraint.Violated(err); ok {
-		return r.constraintErr(ctx, c)
-	} else if err != nil {
+	if err != nil {
 		log.Error().Err(err).Msg("failed to update operation")
-		return errs.Internal
+		return r.appError(err).WithReqID(ctx)
 	}
 
 	// Обновляем баланс пользователя
@@ -154,7 +150,7 @@ func (r *Repo) OperationUpdateFurther(ctx context.Context, opType models.Operati
 
 	if err = tx.Commit(); err != nil {
 		log.Error().Err(err).Msg("failed to commit transaction")
-		return errs.Internal
+		return r.appError(err).WithReqID(ctx)
 	}
 
 	log.Debug().Msg("further operation updated")
@@ -176,7 +172,7 @@ var stmtOperationGetByType = registerStmt(`
 // OperationGetByType - возвращает список операций пользователя заданного типа.
 func (r *Repo) OperationGetByType(ctx context.Context, userID int64, t models.OperationType) ([]models.Operation, error) {
 
-	log := r.log.WithRequestID(ctx).With().
+	log := r.log.WithReqID(ctx).With().
 		Int64("user_id", userID).
 		Str("type", string(t)).
 		Logger()
@@ -184,7 +180,7 @@ func (r *Repo) OperationGetByType(ctx context.Context, userID int64, t models.Op
 	rows, err := r.stmts[stmtOperationGetByType].QueryContext(ctx, userID, t)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to get operations list")
-		return nil, errs.Internal
+		return nil, r.appError(err).WithReqID(ctx)
 	}
 	//goland:noinspection GoUnhandledErrorResult
 	defer rows.Close()
@@ -192,7 +188,7 @@ func (r *Repo) OperationGetByType(ctx context.Context, userID int64, t models.Op
 	ops, err := r.operationScanRows(ctx, rows)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to scan operations")
-		return nil, errs.Internal
+		return nil, r.appError(err).WithReqID(ctx)
 	}
 	return ops, nil
 }
@@ -215,14 +211,14 @@ var stmtOperationGetBalance = registerStmt(`
 // OperationGetBalance - возвращает список операций пользователя, учитывающихся в балансе.
 func (r *Repo) OperationGetBalance(ctx context.Context, userID int64) ([]models.Operation, error) {
 
-	log := r.log.WithRequestID(ctx).With().
+	log := r.log.WithReqID(ctx).With().
 		Int64("user_id", userID).
 		Logger()
 
 	rows, err := r.stmts[stmtOperationGetBalance].QueryContext(ctx, userID)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to get operations list")
-		return nil, errs.Internal
+		return nil, r.appError(err).WithReqID(ctx)
 	}
 	//goland:noinspection GoUnhandledErrorResult
 	defer rows.Close()
@@ -230,7 +226,7 @@ func (r *Repo) OperationGetBalance(ctx context.Context, userID int64) ([]models.
 	ops, err := r.operationScanRows(ctx, rows)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to scan operations")
-		return nil, errs.Internal
+		return nil, r.appError(err).WithReqID(ctx)
 	}
 	return ops, nil
 }
@@ -261,7 +257,7 @@ func (r *Repo) operationScanRows(ctx context.Context, rows *sql.Rows) ([]models.
 		ops = append(ops, op)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, r.appError(err).WithReqID(ctx)
 	}
 	return ops, nil
 }

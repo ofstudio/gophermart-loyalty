@@ -2,9 +2,10 @@ package repo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/shopspring/decimal"
-	"gophermart-loyalty/internal/errs"
+	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/models"
 	"sync"
 	"time"
@@ -43,59 +44,59 @@ func (suite *repoSuite) TestOperationCreate() {
 
 func (suite *repoSuite) TestOperationCreate_constraints() {
 
-	suite.Run("MustRefsUser", func() {
+	suite.Run("must_refs_user constraint", func() {
 		err := suite.repo.OperationCreate(suite.ctx(), testOA(1000, "10", 100, models.StatusNew))
-		suite.ErrorIs(err, errs.NonExistingUser)
+		suite.ErrorIs(err, app.ErrOperationUserNotExists)
 	})
 
-	suite.Run("AmountValidSign", func() {
+	suite.Run("amount_valid_sign constraint", func() {
 		err := suite.repo.OperationCreate(suite.ctx(), testOA(1, "10", -100, models.StatusProcessed))
-		suite.ErrorIs(err, errs.Validation)
+		suite.ErrorIs(err, app.ErrOperationAmountInvalid)
 
 		err = suite.repo.OperationCreate(suite.ctx(), testOW(1, "20", 100, models.StatusProcessed))
-		suite.ErrorIs(err, errs.Validation)
+		suite.ErrorIs(err, app.ErrOperationAmountInvalid)
 
 		err = suite.repo.OperationCreate(suite.ctx(), testPA(1, 1, -100, models.StatusProcessed))
-		suite.ErrorIs(err, errs.Validation)
+		suite.ErrorIs(err, app.ErrOperationAmountInvalid)
 	})
 
-	suite.Run("OrderBelongsToUser", func() {
+	suite.Run("order_belongs_to_user constraint", func() {
 		err := suite.repo.OperationCreate(suite.ctx(), testOA(1, "10", 100, models.StatusNew))
 		suite.NoError(err)
 
 		err = suite.repo.OperationCreate(suite.ctx(), testOA(2, "10", 100, models.StatusNew))
-		suite.ErrorIs(err, errs.Conflict)
+		suite.ErrorIs(err, app.ErrOperationOrderNotBelongs)
 	})
 
-	suite.Run("OrderUniqueForType", func() {
+	suite.Run("order_unique_for_op_type constraint", func() {
 		err := suite.repo.OperationCreate(suite.ctx(), testOA(1, "100", 100, models.StatusNew))
 		suite.NoError(err)
 		err = suite.repo.OperationCreate(suite.ctx(), testOA(1, "100", 100, models.StatusNew))
-		suite.ErrorIs(err, errs.Duplicate)
+		suite.ErrorIs(err, app.ErrOperationOrderUsed)
 	})
 
-	suite.Run("BalanceNotNegative", func() {
+	suite.Run("balance_not_negative constraint", func() {
 		err := suite.repo.OperationCreate(suite.ctx(), testOA(3, "60", 100, models.StatusProcessed))
 		suite.NoError(err)
 		err = suite.repo.OperationCreate(suite.ctx(), testOW(3, "60", -100, models.StatusNew))
 		suite.NoError(err)
 		err = suite.repo.OperationCreate(suite.ctx(), testOW(3, "70", -150, models.StatusProcessing))
-		suite.ErrorIs(err, errs.InsufficientBalance)
+		suite.ErrorIs(err, app.ErrUserBalanceNegative)
 	})
 
-	suite.Run("MustRefsPromo", func() {
+	suite.Run("must_refs_promo constraint", func() {
 		err := suite.repo.OperationCreate(suite.ctx(), testPA(1, 100500, 100, models.StatusProcessed))
-		suite.ErrorIs(err, errs.NonExistingPromo)
+		suite.ErrorIs(err, app.ErrOperationPromoNotExists)
 	})
 
-	suite.Run("PromoUniqueForUser", func() {
+	suite.Run("promo_unique_for_user constraint", func() {
 		err := suite.repo.OperationCreate(suite.ctx(), testPA(2, 1, 100, models.StatusProcessed))
 		suite.NoError(err)
 		err = suite.repo.OperationCreate(suite.ctx(), testPA(2, 1, 100, models.StatusProcessed))
-		suite.ErrorIs(err, errs.Duplicate)
+		suite.ErrorIs(err, app.ErrOperationPromoUsed)
 	})
 
-	suite.Run("OperationValidAttrs", func() {
+	suite.Run("operation_valid_attrs constraint", func() {
 		promoID := uint64(1)
 		orderNumber := "200"
 		op := &models.Operation{
@@ -109,15 +110,15 @@ func (suite *repoSuite) TestOperationCreate_constraints() {
 		}
 
 		err := suite.repo.OperationCreate(suite.ctx(), op)
-		suite.ErrorIs(err, errs.Internal)
+		suite.ErrorIs(err, app.ErrOperationAttrsInvalid)
 
 		op.PromoID = &promoID
 		err = suite.repo.OperationCreate(suite.ctx(), op)
-		suite.ErrorIs(err, errs.Internal)
+		suite.ErrorIs(err, app.ErrOperationAttrsInvalid)
 
 		op.OrderNumber = &orderNumber
 		err = suite.repo.OperationCreate(suite.ctx(), op)
-		suite.ErrorIs(err, errs.Internal)
+		suite.ErrorIs(err, app.ErrOperationAttrsInvalid)
 
 		op.PromoID = nil
 		err = suite.repo.OperationCreate(suite.ctx(), op)
@@ -276,7 +277,7 @@ func (suite *repoSuite) updateWorker(ctx context.Context, wg *sync.WaitGroup, pi
 			return
 		default:
 			err := suite.repo.OperationUpdateFurther(ctx, models.OrderAccrual, suite.updateFunc)
-			if err == NoFurtherOperations {
+			if errors.Is(err, app.ErrNotFound) {
 				return
 			}
 			suite.NoError(err)

@@ -44,7 +44,7 @@ func (suite *repoSuite) SetupTest() {
 
 	// Создаем репозиторий
 	var err error
-	suite.repo, err = NewRepo(config.DB{DatabaseURI: autotestDSN, RequiredVersion: 1}, suite.log)
+	suite.repo, err = NewRepo(config.DB{URI: autotestDSN, RequiredVersion: 1}, suite.log)
 	suite.NoError(err)
 
 	// Создаем пользователей
@@ -57,7 +57,8 @@ func (suite *repoSuite) SetupTest() {
 		Code:        "TEST-PROMO",
 		Description: "Test promo",
 		Reward:      decimal.NewFromInt(5),
-		ValidUntil:  time.Now().Add(time.Hour * 24 * 7),
+		NotBefore:   time.Now().Add(-time.Hour * 24),
+		NotAfter:    time.Now().Add(time.Hour * 24 * 7),
 	}))
 }
 
@@ -132,11 +133,12 @@ func testPA(u uint64, p uint64, a int, s models.OperationStatus) *models.Operati
 	}
 }
 
-func testPromo(code string, reward int, validUntil time.Time) *models.Promo {
+func testPromo(code string, reward int, notBefore, notAfter time.Time) *models.Promo {
 	return &models.Promo{
 		Code:        code,
 		Description: "test",
 		Reward:      decimal.NewFromInt(int64(reward)),
-		ValidUntil:  validUntil,
+		NotBefore:   notBefore,
+		NotAfter:    notAfter,
 	}
 }

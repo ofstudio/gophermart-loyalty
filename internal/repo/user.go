@@ -3,9 +3,7 @@ package repo
 import (
 	"context"
 	"database/sql"
-	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/models"
-	"gophermart-loyalty/internal/repo/constraint"
 )
 
 // stmtUserCreate - создает пользователя.
@@ -20,18 +18,14 @@ var stmtUserCreate = registerStmt(`
 
 // UserCreate - создает пользователя по логину и хэшу пароля
 func (r *Repo) UserCreate(ctx context.Context, u *models.User) error {
-	log := r.log.WithRequestID(ctx).With().Str("login", u.Login).Logger()
+	log := r.log.WithReqID(ctx).With().Str("login", u.Login).Logger()
 	err := r.stmts[stmtUserCreate].
 		QueryRowContext(ctx, u.Login, u.PassHash).
 		Scan(&u.ID, &u.Balance, &u.Withdrawn, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
-		if c, ok := constraint.Violated(err); ok {
-			return r.constraintErr(ctx, c)
-		}
 		log.Error().Err(err).Msg("failed to create user")
-		return errs.Internal
+		return r.appError(err).WithReqID(ctx)
 	}
-
 	log.Debug().Msg("user created")
 	return nil
 }
@@ -46,16 +40,14 @@ var stmtUserGetByID = registerStmt(`
 
 // UserGetByID - возвращает пользователя по id.
 func (r *Repo) UserGetByID(ctx context.Context, id uint64) (*models.User, error) {
-	log := r.log.WithRequestID(ctx).With().Uint64("id", id).Logger()
+	log := r.log.WithReqID(ctx).With().Uint64("id", id).Logger()
 	u := &models.User{}
 	err := r.stmts[stmtUserGetByID].
 		QueryRowContext(ctx, id).
 		Scan(&u.ID, &u.Login, &u.PassHash, &u.Balance, &u.Withdrawn, &u.CreatedAt, &u.UpdatedAt)
-	if err == sql.ErrNoRows {
-		return nil, errs.NotFound
-	} else if err != nil {
+	if err != nil {
 		log.Error().Err(err).Msg("failed to get user")
-		return nil, errs.Internal
+		return nil, r.appError(err).WithReqID(ctx)
 	}
 	log.Debug().Msg("user retrieved")
 	return u, nil
@@ -71,16 +63,14 @@ var stmtUserGetByLogin = registerStmt(`
 
 // UserGetByLogin - возвращает пользователя по логину.
 func (r *Repo) UserGetByLogin(ctx context.Context, login string) (*models.User, error) {
-	log := r.log.WithRequestID(ctx).With().Str("login", login).Logger()
+	log := r.log.WithReqID(ctx).With().Str("login", login).Logger()
 	u := &models.User{}
 	err := r.stmts[stmtUserGetByLogin].
 		QueryRowContext(ctx, login).
 		Scan(&u.ID, &u.Login, &u.PassHash, &u.Balance, &u.Withdrawn, &u.CreatedAt, &u.UpdatedAt)
-	if err == sql.ErrNoRows {
-		return nil, errs.NotFound
-	} else if err != nil {
+	if err != nil {
 		log.Error().Err(err).Msg("failed to get user")
-		return nil, errs.Internal
+		return nil, r.appError(err).WithReqID(ctx)
 	}
 	log.Debug().Msg("user retrieved")
 	return u, nil
@@ -97,10 +87,10 @@ var stmtUserLock = registerStmt(`
 // userLockTx - блокирует пользователя для обновления другими транзакциями.
 // ВАЖНО: может вызываться только внутри транзакции
 func (r *Repo) userLockTx(ctx context.Context, tx *sql.Tx, id uint64) error {
-	log := r.log.WithRequestID(ctx).With().Uint64("id", id).Logger()
-	err := tx.Stmt(r.stmts[stmtUserLock]).QueryRowContext(ctx, id).Scan(&sql.NullInt64{})
-	if err != nil {
-		return errs.NonExistingUser
+	log := r.log.WithReqID(ctx).With().Uint64("id", id).Logger()
+	if err := tx.Stmt(r.stmts[stmtUserLock]).QueryRowContext(ctx, id).Scan(&sql.NullInt64{}); err != nil {
+		log.Error().Err(err).Msg("failed to lock user for update")
+		return r.appError(err).WithReqID(ctx)
 	}
 	log.Debug().Msg("user locked for update")
 	return nil
@@ -133,16 +123,14 @@ var stmtUserUpdateBalance = registerStmt(`
 // userUpdateBalance - обновляет баланс пользователя.
 // ВАЖНО: может вызываться только внутри транзакции и только после вызова Repo.userLockTx
 func (r *Repo) userUpdateBalanceTx(ctx context.Context, tx *sql.Tx, id uint64) error {
-	log := r.log.WithRequestID(ctx).With().Uint64("id", id).Logger()
-
-	err := tx.Stmt(r.stmts[stmtUserUpdateBalance]).QueryRowContext(ctx, id).Scan(&sql.NullInt64{})
-	if c, ok := constraint.Violated(err); ok {
-		return r.constraintErr(ctx, c)
-	} else if err != nil {
+	log := r.log.WithReqID(ctx).With().Uint64("id", id).Logger()
+	err := tx.Stmt(r.stmts[stmtUserUpdateBalance]).
+		QueryRowContext(ctx, id).
+		Scan(&sql.NullInt64{})
+	if err != nil {
 		log.Error().Err(err).Msg("failed to update user balance")
-		return errs.Internal
+		return r.appError(err).WithReqID(ctx)
 	}
-
 	log.Debug().Msg("user balance updated")
 	return nil
 }
