@@ -5,18 +5,22 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/models"
+	"regexp"
 )
+
+var LoginRegexp = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._\-@ ]{2,63}$`)
+var PassRegexp = regexp.MustCompile(`^.{6,512}$`)
 
 func (u *UseCases) UserCreate(ctx context.Context, login, password string) (*models.User, error) {
 	log := u.log.WithReqID(ctx).With().Str("login", login).Logger()
 
 	// проверяем логин
-	if len(login) < 3 {
+	if !LoginRegexp.MatchString(login) {
 		return nil, app.ErrUserLoginInvalid
 	}
 
 	// проверяем пароль
-	if len(password) < 6 {
+	if !PassRegexp.MatchString(password) {
 		return nil, app.ErrUserPassInvalid
 	}
 
