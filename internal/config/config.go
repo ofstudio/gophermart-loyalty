@@ -18,9 +18,9 @@ type DB struct {
 
 // Auth - конфигурация авторизации.
 type Auth struct {
-	JWTSigningAlg string        // JWTSigningAlg - алгоритм подписи JWT-токена
-	TTL           time.Duration // TTL - время жизни авторизационного токена
-	Secret        string        `env:"AUTH_SECRET"` // Secret - секрет для подписи токена
+	SigningKey string        `env:"AUTH_SECRET"` // SigningKey - ключ для подписи токена
+	SigningAlg string        // SigningAlg - алгоритм подписи JWT-токена
+	TTL        time.Duration // TTL - время жизни авторизационного токена
 }
 
 type Config struct {
@@ -107,7 +107,7 @@ func (c *Config) validateServerAddr() error {
 
 // validateAuthSecret - проверяет чтобы ключ авторизации был не пустым.
 func (c *Config) validateAuthSecret() error {
-	if len(c.Auth.Secret) == 0 {
+	if len(c.Auth.SigningKey) == 0 {
 		return fmt.Errorf("auth secret not set")
 	}
 	return nil

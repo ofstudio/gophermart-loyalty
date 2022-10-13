@@ -16,9 +16,9 @@ func Default(_ *Config) (*Config, error) {
 			RequiredVersion: 1,
 		},
 		Auth: Auth{
-			JWTSigningAlg: "HS512",
-			TTL:           30 * 24 * time.Hour,
-			Secret:        secret,
+			SigningAlg: "HS512",
+			TTL:        30 * 24 * time.Hour,
+			SigningKey: secret,
 		},
 		RunAddress: "0.0.0.0:8080",
 	}
