@@ -29,7 +29,7 @@ type repoSuite struct {
 }
 
 func (suite *repoSuite) SetupSuite() {
-	suite.log = logger.NewLogger(zerolog.InfoLevel)
+	suite.log = logger.NewLogger(zerolog.DebugLevel)
 	// Если тестовая БД не запущена - пропускаем тест
 	if err := suite.isDBAvailable(autotestDSN); err != nil {
 		suite.T().Skipf("skipping suite: database is not available: %v", err)

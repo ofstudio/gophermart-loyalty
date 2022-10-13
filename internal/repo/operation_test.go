@@ -285,7 +285,7 @@ func (suite *repoSuite) updateWorker(ctx context.Context, wg *sync.WaitGroup, pi
 	}
 }
 
-// updateFunc - коллбэк обновления операции.
+// UpdateFunc - коллбэк обновления операции.
 // В результате работы все статусы NEW и PROCESSING обновятся
 //    user_id = 1 => CANCELED
 //    user_id = 2 => INVALID

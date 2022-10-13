@@ -20,16 +20,12 @@ var stmtPromoCreate = registerStmt(`
 
 // PromoCreate - создает промо-кампанию.
 func (r *Repo) PromoCreate(ctx context.Context, p *models.Promo) error {
-	log := r.log.WithReqID(ctx).With().Str("code", p.Code).Logger()
 	err := r.stmts[stmtPromoCreate].
 		QueryRowContext(ctx, &p.Code, &p.Description, &p.Reward, &p.NotBefore, &p.NotAfter).
 		Scan(&p.ID)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to create promo")
-		return r.appError(err).WithReqID(ctx)
+		return r.handleError(ctx, err)
 	}
-
-	log.Debug().Msg("promo created")
 	return nil
 }
 
@@ -44,16 +40,12 @@ var stmtPromoGetByCode = registerStmt(`
 
 // PromoGetByCode - возвращает промо-кампанию по id.
 func (r *Repo) PromoGetByCode(ctx context.Context, code string) (*models.Promo, error) {
-	log := r.log.WithReqID(ctx).With().Str("code", code).Logger()
-
 	p := &models.Promo{}
 	err := r.stmts[stmtPromoGetByCode].
 		QueryRowContext(ctx, code).
 		Scan(&p.ID, &p.Code, &p.Description, &p.Reward, &p.NotBefore, &p.NotAfter, &p.CreatedAt)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to get promo")
-		return nil, r.appError(err).WithReqID(ctx)
+		return nil, r.handleError(ctx, err)
 	}
-	log.Debug().Msg("promo retrieved")
 	return p, nil
 }

@@ -1,7 +1,9 @@
 package repo
 
 import (
+	"context"
 	"database/sql"
+	"errors"
 	"github.com/jackc/pgconn"
 	"gophermart-loyalty/internal/app"
 )
@@ -25,7 +27,9 @@ var constraintToAppError = map[string]*app.Error{
 	"promo_valid_period":    app.ErrPromoPeriodInvalid,     // дата начала промо-кампании должна быть меньше даты окончания
 }
 
-func (r *Repo) appError(err error) *app.Error {
+func (r *Repo) handleError(ctx context.Context, err error) error {
+	log := r.log.WithReqID(ctx)
+
 	// Если ошибки нет, то возвращаем nil
 	if err == nil {
 		return nil
@@ -37,7 +41,7 @@ func (r *Repo) appError(err error) *app.Error {
 	}
 
 	// Если не найдены записи, то возвращаем ErrNotFound
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return app.ErrNotFound
 	}
 
@@ -46,12 +50,10 @@ func (r *Repo) appError(err error) *app.Error {
 		// Если нарушение ограничения известно, то возвращаем соответствующую ошибку
 		if appErr, ok := constraintToAppError[pgErr.ConstraintName]; ok {
 			return appErr
-		} else {
-			// Иначе выводим предупреждение в лог
-			r.log.Warn().Str("constraint", pgErr.ConstraintName).Msg("unknown constraint violation")
 		}
 	}
 
 	// Если другая ошибка или неизвестное ограничение, то возвращаем ErrInternal
+	log.Error().CallerSkipFrame(1).Err(err).Msg("repo internal error")
 	return app.ErrInternal
 }

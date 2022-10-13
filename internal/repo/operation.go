@@ -27,15 +27,10 @@ var stmtOperationCreate = registerStmt(`
 
 // OperationCreate - создает операцию и обновляет баланс пользователя.
 func (r *Repo) OperationCreate(ctx context.Context, op *models.Operation) error {
-	log := r.log.WithReqID(ctx).With().
-		Uint64("user_id", op.UserID).
-		Str("type", string(op.Type)).
-		Logger()
 
 	tx, err := r.db.Begin()
 	if err != nil {
-		log.Error().Err(err).Msg("failed to begin transaction")
-		return r.appError(err).WithReqID(ctx)
+		return r.handleError(ctx, err)
 	}
 	//goland:noinspection ALL
 	defer tx.Rollback()
@@ -43,7 +38,7 @@ func (r *Repo) OperationCreate(ctx context.Context, op *models.Operation) error 
 	// Блокируем запись пользователя для обновления
 	if err = r.userLockTx(ctx, tx, op.UserID); err != nil {
 		if errors.Is(err, app.ErrNotFound) {
-			err = app.ErrOperationUserNotExists.WithReqID(ctx)
+			err = app.ErrOperationUserNotExists
 		}
 		return err
 	}
@@ -53,8 +48,7 @@ func (r *Repo) OperationCreate(ctx context.Context, op *models.Operation) error 
 		QueryRowContext(ctx, op.UserID, op.Type, op.Status, op.Amount, op.Description, op.OrderNumber, op.PromoID).
 		Scan(&op.ID, &op.CreatedAt, &op.UpdatedAt)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to create operation")
-		return r.appError(err).WithReqID(ctx)
+		return r.handleError(ctx, err)
 	}
 
 	// Обновляем баланс пользователя
@@ -63,15 +57,13 @@ func (r *Repo) OperationCreate(ctx context.Context, op *models.Operation) error 
 	}
 
 	if err = tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("failed to commit transaction")
-		return r.appError(err).WithReqID(ctx)
+		return r.handleError(ctx, err)
 	}
 
-	log.Debug().Msg("operation created")
 	return nil
 }
 
-type updateFunc func(ctx context.Context, operation *models.Operation) error
+type UpdateFunc func(ctx context.Context, operation *models.Operation) error
 
 // stmtOperationLockFurther - ищет операцию самую старую операцию заданного типа,
 // которая находится не в конечном статусе, и блокирует ее для обновления другими транзакциями.
@@ -97,16 +89,14 @@ var stmtOperationUpdate = registerStmt(`
 	RETURNING id
 `)
 
-// OperationUpdateFurther - берет операцию самую старую операцию заданного типа,
+// OperationUpdateFurther - берет самую старую операцию заданного типа,
 // которая находится не в конечном статусе, вызывает для нее коллбэк updateOp, обновляет операцию
 // и обновляет баланс пользователя.
-func (r *Repo) OperationUpdateFurther(ctx context.Context, opType models.OperationType, updateOp updateFunc) error {
-	log := r.log.WithReqID(ctx)
+func (r *Repo) OperationUpdateFurther(ctx context.Context, opType models.OperationType, updateOp UpdateFunc) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
-		log.Error().Err(err).Msg("failed to begin transaction")
-		return r.appError(err).WithReqID(ctx)
+		return r.handleError(ctx, err)
 	}
 	//goland:noinspection ALL
 	defer tx.Rollback()
@@ -116,12 +106,8 @@ func (r *Repo) OperationUpdateFurther(ctx context.Context, opType models.Operati
 	err = tx.Stmt(r.stmts[stmtOperationLockFurther]).
 		QueryRowContext(ctx, opType).
 		Scan(&op.ID, &op.UserID, &op.Type, &op.Status, &op.Amount, &op.Description, &op.OrderNumber, &op.PromoID)
-	if err == sql.ErrNoRows {
-		log.Debug().Msg("no further operations to update")
-		return app.ErrNotFound.WithReqID(ctx)
-	} else if err != nil {
-		log.Error().Err(err).Msg("failed to lock further operation")
-		return r.appError(err).WithReqID(ctx)
+	if err != nil {
+		return r.handleError(ctx, err)
 	}
 
 	// Вызываем коллбэк для обновления данных операции
@@ -131,7 +117,7 @@ func (r *Repo) OperationUpdateFurther(ctx context.Context, opType models.Operati
 
 	// Блокируем запись пользователя для обновления
 	if err = r.userLockTx(ctx, tx, op.UserID); err != nil {
-		return r.appError(err).WithReqID(ctx)
+		return err
 	}
 
 	// Обновляем операцию
@@ -139,8 +125,7 @@ func (r *Repo) OperationUpdateFurther(ctx context.Context, opType models.Operati
 		QueryRowContext(ctx, op.ID, op.Status, op.Amount).
 		Scan(&sql.NullInt64{})
 	if err != nil {
-		log.Error().Err(err).Msg("failed to update operation")
-		return r.appError(err).WithReqID(ctx)
+		return r.handleError(ctx, err)
 	}
 
 	// Обновляем баланс пользователя
@@ -149,11 +134,9 @@ func (r *Repo) OperationUpdateFurther(ctx context.Context, opType models.Operati
 	}
 
 	if err = tx.Commit(); err != nil {
-		log.Error().Err(err).Msg("failed to commit transaction")
-		return r.appError(err).WithReqID(ctx)
+		return r.handleError(ctx, err)
 	}
 
-	log.Debug().Msg("further operation updated")
 	return nil
 }
 
@@ -171,24 +154,16 @@ var stmtOperationGetByType = registerStmt(`
 
 // OperationGetByType - возвращает список операций пользователя заданного типа.
 func (r *Repo) OperationGetByType(ctx context.Context, userID int64, t models.OperationType) ([]models.Operation, error) {
-
-	log := r.log.WithReqID(ctx).With().
-		Int64("user_id", userID).
-		Str("type", string(t)).
-		Logger()
-
 	rows, err := r.stmts[stmtOperationGetByType].QueryContext(ctx, userID, t)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to get operations list")
-		return nil, r.appError(err).WithReqID(ctx)
+		return nil, r.handleError(ctx, err)
 	}
 	//goland:noinspection GoUnhandledErrorResult
 	defer rows.Close()
 
 	ops, err := r.operationScanRows(ctx, rows)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to scan operations")
-		return nil, r.appError(err).WithReqID(ctx)
+		return nil, r.handleError(ctx, err)
 	}
 	return ops, nil
 }
@@ -210,23 +185,16 @@ var stmtOperationGetBalance = registerStmt(`
 
 // OperationGetBalance - возвращает список операций пользователя, учитывающихся в балансе.
 func (r *Repo) OperationGetBalance(ctx context.Context, userID int64) ([]models.Operation, error) {
-
-	log := r.log.WithReqID(ctx).With().
-		Int64("user_id", userID).
-		Logger()
-
 	rows, err := r.stmts[stmtOperationGetBalance].QueryContext(ctx, userID)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to get operations list")
-		return nil, r.appError(err).WithReqID(ctx)
+		return nil, r.handleError(ctx, err)
 	}
 	//goland:noinspection GoUnhandledErrorResult
 	defer rows.Close()
 
 	ops, err := r.operationScanRows(ctx, rows)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to scan operations")
-		return nil, r.appError(err).WithReqID(ctx)
+		return nil, err
 	}
 	return ops, nil
 }
@@ -236,7 +204,7 @@ func (r *Repo) operationScanRows(ctx context.Context, rows *sql.Rows) ([]models.
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
-			return nil, ctx.Err()
+			return nil, r.handleError(ctx, ctx.Err())
 		default:
 		}
 		op := models.Operation{}
@@ -257,7 +225,7 @@ func (r *Repo) operationScanRows(ctx context.Context, rows *sql.Rows) ([]models.
 		ops = append(ops, op)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, r.appError(err).WithReqID(ctx)
+		return nil, r.handleError(ctx, err)
 	}
 	return ops, nil
 }

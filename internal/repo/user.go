@@ -18,15 +18,12 @@ var stmtUserCreate = registerStmt(`
 
 // UserCreate - создает пользователя по логину и хэшу пароля
 func (r *Repo) UserCreate(ctx context.Context, u *models.User) error {
-	log := r.log.WithReqID(ctx).With().Str("login", u.Login).Logger()
 	err := r.stmts[stmtUserCreate].
 		QueryRowContext(ctx, u.Login, u.PassHash).
 		Scan(&u.ID, &u.Balance, &u.Withdrawn, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to create user")
-		return r.appError(err).WithReqID(ctx)
+		return r.handleError(ctx, err)
 	}
-	log.Debug().Msg("user created")
 	return nil
 }
 
@@ -40,16 +37,13 @@ var stmtUserGetByID = registerStmt(`
 
 // UserGetByID - возвращает пользователя по id.
 func (r *Repo) UserGetByID(ctx context.Context, id uint64) (*models.User, error) {
-	log := r.log.WithReqID(ctx).With().Uint64("id", id).Logger()
 	u := &models.User{}
 	err := r.stmts[stmtUserGetByID].
 		QueryRowContext(ctx, id).
 		Scan(&u.ID, &u.Login, &u.PassHash, &u.Balance, &u.Withdrawn, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to get user")
-		return nil, r.appError(err).WithReqID(ctx)
+		return nil, r.handleError(ctx, err)
 	}
-	log.Debug().Msg("user retrieved")
 	return u, nil
 }
 
@@ -63,16 +57,13 @@ var stmtUserGetByLogin = registerStmt(`
 
 // UserGetByLogin - возвращает пользователя по логину.
 func (r *Repo) UserGetByLogin(ctx context.Context, login string) (*models.User, error) {
-	log := r.log.WithReqID(ctx).With().Str("login", login).Logger()
 	u := &models.User{}
 	err := r.stmts[stmtUserGetByLogin].
 		QueryRowContext(ctx, login).
 		Scan(&u.ID, &u.Login, &u.PassHash, &u.Balance, &u.Withdrawn, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to get user")
-		return nil, r.appError(err).WithReqID(ctx)
+		return nil, r.handleError(ctx, err)
 	}
-	log.Debug().Msg("user retrieved")
 	return u, nil
 }
 
@@ -87,12 +78,9 @@ var stmtUserLock = registerStmt(`
 // userLockTx - блокирует пользователя для обновления другими транзакциями.
 // ВАЖНО: может вызываться только внутри транзакции
 func (r *Repo) userLockTx(ctx context.Context, tx *sql.Tx, id uint64) error {
-	log := r.log.WithReqID(ctx).With().Uint64("id", id).Logger()
 	if err := tx.Stmt(r.stmts[stmtUserLock]).QueryRowContext(ctx, id).Scan(&sql.NullInt64{}); err != nil {
-		log.Error().Err(err).Msg("failed to lock user for update")
-		return r.appError(err).WithReqID(ctx)
+		return r.handleError(ctx, err)
 	}
-	log.Debug().Msg("user locked for update")
 	return nil
 }
 
@@ -123,14 +111,11 @@ var stmtUserUpdateBalance = registerStmt(`
 // userUpdateBalance - обновляет баланс пользователя.
 // ВАЖНО: может вызываться только внутри транзакции и только после вызова Repo.userLockTx
 func (r *Repo) userUpdateBalanceTx(ctx context.Context, tx *sql.Tx, id uint64) error {
-	log := r.log.WithReqID(ctx).With().Uint64("id", id).Logger()
 	err := tx.Stmt(r.stmts[stmtUserUpdateBalance]).
 		QueryRowContext(ctx, id).
 		Scan(&sql.NullInt64{})
 	if err != nil {
-		log.Error().Err(err).Msg("failed to update user balance")
-		return r.appError(err).WithReqID(ctx)
+		return r.handleError(ctx, err)
 	}
-	log.Debug().Msg("user balance updated")
 	return nil
 }

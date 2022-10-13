@@ -9,7 +9,7 @@ import (
 	"gophermart-loyalty/internal/repo/migrations"
 )
 
-// Repo - репозиторий для работы с БД.
+// Repo - репозиторий для работы с Postgres.
 type Repo struct {
 	db    *sql.DB
 	log   logger.Log
