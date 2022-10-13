@@ -12,47 +12,22 @@ import (
 
 // DB - конфигурация подключения к базе данных.
 type DB struct {
-	// DatabaseURI - адрес подключения к базе данных
-	DatabaseURI     string `env:"DATABASE_URI"`
-	RequiredVersion int64
+	URI             string `env:"DATABASE_URI"` // URI - адрес подключения к базе данных
+	RequiredVersion int64  // RequiredVersion - требуемая версия схемы базы данных
+}
+
+// Auth - конфигурация авторизации.
+type Auth struct {
+	JWTSigningAlg string        // JWTSigningAlg - алгоритм подписи JWT-токена
+	TTL           time.Duration // TTL - время жизни авторизационного токена
+	Secret        string        `env:"AUTH_SECRET"` // Secret - секрет для подписи токена
 }
 
 type Config struct {
-	// RunAddress - адрес и порт запуска сервиса
-	RunAddress string `env:"RUN_ADDRESS"`
-
-	// DB - конфигурация подключения к базе данных
-	DB DB
-
-	// AccrualSystemAddress - адрес системы расчёта начислений
-	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
-
-	// AuthTTL - время жизни авторизационного токена
-	AuthTTL time.Duration `env:"AUTH_TTL"`
-
-	// AuthSecret - секретный ключ для подписи авторизационного токена
-	AuthSecret string `env:"AUTH_SECRET,unset"`
-
-	// PasswdMinLen - минимальная длина пароля
-	PasswdMinLen int
-}
-
-// Default - конфигурационная функция, возвращает конфигурацию по умолчанию.
-func Default(_ *Config) (*Config, error) {
-	secret, err := randSecret(64)
-	if err != nil {
-		return nil, err
-	}
-	cfg := Config{
-		RunAddress: "0.0.0.0:8080",
-		DB: DB{
-			RequiredVersion: 1,
-		},
-		AuthTTL:      time.Minute * 60 * 24 * 30,
-		AuthSecret:   secret,
-		PasswdMinLen: 8,
-	}
-	return &cfg, nil
+	DB                   DB     // DB - конфигурация подключения к базе данных
+	Auth                 Auth   // Auth - конфигурация авторизации
+	RunAddress           string `env:"RUN_ADDRESS"`            // RunAddress - адрес и порт запуска сервиса
+	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"` // AccrualSystemAddress - адрес системы расчёта начислений
 }
 
 // FromCLI - конфигурационная функция, которая считывает конфигурацию приложения из переменных окружения.
@@ -74,8 +49,8 @@ func fromCLI(cfg *Config, arguments ...string) (*Config, error) {
 	// Парсим командную строку
 	cli := flag.NewFlagSet("config", flag.ExitOnError)
 	cli.StringVar(&cfg.RunAddress, "a", cfg.RunAddress, "адрес и порт запуска сервиса")
-	cli.StringVar(&cfg.DB.DatabaseURI, "d", cfg.DB.DatabaseURI, "адрес подключения к базе данных")
-	cli.DurationVar(&cfg.AuthTTL, "t", cfg.AuthTTL, "время жизни авторизационного токена")
+	cli.StringVar(&cfg.DB.URI, "d", cfg.DB.URI, "адрес подключения к базе данных")
+	cli.DurationVar(&cfg.Auth.TTL, "t", cfg.Auth.TTL, "время жизни авторизационного токена")
 	if err := cli.Parse(arguments); err != nil {
 		return nil, err
 	}
@@ -132,7 +107,7 @@ func (c *Config) validateServerAddr() error {
 
 // validateAuthSecret - проверяет чтобы ключ авторизации был не пустым.
 func (c *Config) validateAuthSecret() error {
-	if len(c.AuthSecret) == 0 {
+	if len(c.Auth.Secret) == 0 {
 		return fmt.Errorf("auth secret not set")
 	}
 	return nil
