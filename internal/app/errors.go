@@ -2,9 +2,7 @@
 package app
 
 import (
-	"context"
 	"errors"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 // Общие ошибки приложения 1000-1099
@@ -84,9 +82,8 @@ var (
 
 type Error struct {
 	error
-	Code      int
-	HTTPCode  int
-	RequestID string
+	Code     int
+	HTTPCode int
 }
 
 func NewError(code, httpCode int, message string) *Error {
@@ -95,20 +92,6 @@ func NewError(code, httpCode int, message string) *Error {
 		Code:     code,
 		HTTPCode: httpCode,
 	}
-}
-
-// WithReqID - копирует ошибку и добавляет в нее ID запроса из контекста
-func (e *Error) WithReqID(ctx context.Context) *Error {
-	if e == nil {
-		return nil
-	}
-	err := &Error{
-		error:     e.error,
-		Code:      e.Code,
-		HTTPCode:  e.HTTPCode,
-		RequestID: middleware.GetReqID(ctx),
-	}
-	return err
 }
 
 func (e *Error) Is(tgt error) bool {
