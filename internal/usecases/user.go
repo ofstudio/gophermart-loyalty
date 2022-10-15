@@ -2,25 +2,26 @@ package usecases
 
 import (
 	"context"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
 	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/models"
 	"regexp"
 )
 
-var LoginRegexp = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._\-@ ]{2,63}$`)
-var PassRegexp = regexp.MustCompile(`^.{6,512}$`)
+var LoginValidateRe = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._\-@ ]{2,63}$`)
+var PassValidateRe = regexp.MustCompile(`^.{6,512}$`)
 
 func (u *UseCases) UserCreate(ctx context.Context, login, password string) (*models.User, error) {
-	log := u.log.WithReqID(ctx).With().Str("login", login).Logger()
+	log := u.log.WithReqID(ctx)
 
 	// проверяем логин
-	if !LoginRegexp.MatchString(login) {
+	if !LoginValidateRe.MatchString(login) {
 		return nil, app.ErrUserLoginInvalid
 	}
 
 	// проверяем пароль
-	if !PassRegexp.MatchString(password) {
+	if !PassValidateRe.MatchString(password) {
 		return nil, app.ErrUserPassInvalid
 	}
 
@@ -44,17 +45,16 @@ func (u *UseCases) UserCreate(ctx context.Context, login, password string) (*mod
 		return nil, err
 	}
 
-	log.Debug().Msg("user created")
+	log.Debug().Uint64("user_id", user.ID).Msg("user created")
 	return user, nil
 }
 
 func (u *UseCases) UserCheckLoginPass(ctx context.Context, login, password string) (*models.User, error) {
-	log := u.log.WithReqID(ctx).With().Str("login", login).Logger()
 
 	// Ищем пользователя по логину
 	user, err := u.repo.UserGetByLogin(ctx, login)
 	if err != nil {
-		log.Error().Err(err).Msg("failed to find user")
+		u.log.WithReqID(ctx).Error().Err(err).Msg("failed to find user")
 		return nil, app.ErrUnauthorized
 	}
 
@@ -67,9 +67,9 @@ func (u *UseCases) UserCheckLoginPass(ctx context.Context, login, password strin
 	return user, nil
 }
 
-func (u *UseCases) UserGetByID(ctx context.Context, id uint64) (*models.User, error) {
-	log := u.log.WithReqID(ctx).With().Uint64("id", id).Logger()
-	user, err := u.repo.UserGetByID(ctx, id)
+func (u *UseCases) UserGetByID(ctx context.Context, userID uint64) (*models.User, error) {
+	log := u.log.WithReqID(ctx).With().Uint64("user_id", userID).Logger()
+	user, err := u.repo.UserGetByID(ctx, userID)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to find user")
 		return nil, err

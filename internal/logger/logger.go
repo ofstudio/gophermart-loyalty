@@ -22,12 +22,12 @@ func NewLogger(level zerolog.Level) Log {
 	return Log{Logger: l}
 }
 
-func (l Log) WithReqID(ctx context.Context) Log {
+func (l Log) WithReqID(ctx context.Context) *Log {
 	reqID := middleware.GetReqID(ctx)
 	if reqID != "" {
 		l.Logger = l.Logger.With().Str("request_id", reqID).Logger()
 	}
-	return l
+	return &l
 }
 
 func init() {

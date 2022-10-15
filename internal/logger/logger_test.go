@@ -1,6 +1,8 @@
 package logger
 
-import "testing"
+import (
+	"testing"
+)
 
 func Test_callerMarshalFunc(t *testing.T) {
 	type args struct {
