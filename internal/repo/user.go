@@ -36,10 +36,10 @@ var stmtUserGetByID = registerStmt(`
 `)
 
 // UserGetByID - возвращает пользователя по id.
-func (r *Repo) UserGetByID(ctx context.Context, id uint64) (*models.User, error) {
+func (r *Repo) UserGetByID(ctx context.Context, userID uint64) (*models.User, error) {
 	u := &models.User{}
 	err := r.stmts[stmtUserGetByID].
-		QueryRowContext(ctx, id).
+		QueryRowContext(ctx, userID).
 		Scan(&u.ID, &u.Login, &u.PassHash, &u.Balance, &u.Withdrawn, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		return nil, r.handleError(ctx, err)
@@ -77,8 +77,10 @@ var stmtUserLock = registerStmt(`
 
 // userLockTx - блокирует пользователя для обновления другими транзакциями.
 // ВАЖНО: может вызываться только внутри транзакции
-func (r *Repo) userLockTx(ctx context.Context, tx *sql.Tx, id uint64) error {
-	if err := tx.Stmt(r.stmts[stmtUserLock]).QueryRowContext(ctx, id).Scan(&sql.NullInt64{}); err != nil {
+func (r *Repo) userLockTx(ctx context.Context, tx *sql.Tx, userID uint64) error {
+	if err := tx.Stmt(r.stmts[stmtUserLock]).
+		QueryRowContext(ctx, userID).
+		Scan(&sql.NullInt64{}); err != nil {
 		return r.handleError(ctx, err)
 	}
 	return nil
@@ -110,9 +112,9 @@ var stmtUserUpdateBalance = registerStmt(`
 
 // userUpdateBalance - обновляет баланс пользователя.
 // ВАЖНО: может вызываться только внутри транзакции и только после вызова Repo.userLockTx
-func (r *Repo) userUpdateBalanceTx(ctx context.Context, tx *sql.Tx, id uint64) error {
+func (r *Repo) userUpdateBalanceTx(ctx context.Context, tx *sql.Tx, userID uint64) error {
 	err := tx.Stmt(r.stmts[stmtUserUpdateBalance]).
-		QueryRowContext(ctx, id).
+		QueryRowContext(ctx, userID).
 		Scan(&sql.NullInt64{})
 	if err != nil {
 		return r.handleError(ctx, err)

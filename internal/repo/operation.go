@@ -92,7 +92,7 @@ var stmtOperationUpdate = registerStmt(`
 // OperationUpdateFurther - берет самую старую операцию заданного типа,
 // которая находится не в конечном статусе, вызывает для нее коллбэк updateOp, обновляет операцию
 // и обновляет баланс пользователя.
-func (r *Repo) OperationUpdateFurther(ctx context.Context, opType models.OperationType, updateOp UpdateFunc) error {
+func (r *Repo) OperationUpdateFurther(ctx context.Context, opType models.OperationType, updateFunc UpdateFunc) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -111,7 +111,7 @@ func (r *Repo) OperationUpdateFurther(ctx context.Context, opType models.Operati
 	}
 
 	// Вызываем коллбэк для обновления данных операции
-	if err = updateOp(ctx, op); err != nil {
+	if err = updateFunc(ctx, op); err != nil {
 		return err
 	}
 
@@ -153,7 +153,7 @@ var stmtOperationGetByType = registerStmt(`
 `)
 
 // OperationGetByType - возвращает список операций пользователя заданного типа.
-func (r *Repo) OperationGetByType(ctx context.Context, userID int64, t models.OperationType) ([]models.Operation, error) {
+func (r *Repo) OperationGetByType(ctx context.Context, userID uint64, t models.OperationType) ([]*models.Operation, error) {
 	rows, err := r.stmts[stmtOperationGetByType].QueryContext(ctx, userID, t)
 	if err != nil {
 		return nil, r.handleError(ctx, err)
@@ -184,7 +184,7 @@ var stmtOperationGetBalance = registerStmt(`
 `)
 
 // OperationGetBalance - возвращает список операций пользователя, учитывающихся в балансе.
-func (r *Repo) OperationGetBalance(ctx context.Context, userID int64) ([]models.Operation, error) {
+func (r *Repo) OperationGetBalance(ctx context.Context, userID uint64) ([]*models.Operation, error) {
 	rows, err := r.stmts[stmtOperationGetBalance].QueryContext(ctx, userID)
 	if err != nil {
 		return nil, r.handleError(ctx, err)
@@ -199,15 +199,15 @@ func (r *Repo) OperationGetBalance(ctx context.Context, userID int64) ([]models.
 	return ops, nil
 }
 
-func (r *Repo) operationScanRows(ctx context.Context, rows *sql.Rows) ([]models.Operation, error) {
-	var ops []models.Operation
+func (r *Repo) operationScanRows(ctx context.Context, rows *sql.Rows) ([]*models.Operation, error) {
+	var ops []*models.Operation
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, r.handleError(ctx, ctx.Err())
 		default:
 		}
-		op := models.Operation{}
+		op := &models.Operation{}
 		if err := rows.Scan(
 			&op.ID,
 			&op.UserID,
