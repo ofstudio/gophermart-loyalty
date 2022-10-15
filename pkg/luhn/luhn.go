@@ -1,5 +1,6 @@
 package luhn
 
+// Check - проверка номера на соответствие алгоритму Луна.
 func Check(number string) bool {
 	l := len([]rune(number))
 	if l < 2 {
