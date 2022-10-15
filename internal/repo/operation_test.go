@@ -86,7 +86,7 @@ func (suite *repoSuite) TestOperationCreate_constraints() {
 
 	suite.Run("must_refs_promo constraint", func() {
 		err := suite.repo.OperationCreate(suite.ctx(), testPA(1, 100500, 100, models.StatusProcessed))
-		suite.ErrorIs(err, app.ErrOperationPromoNotExists)
+		suite.ErrorIs(err, app.ErrNotFound)
 	})
 
 	suite.Run("promo_unique_for_user constraint", func() {

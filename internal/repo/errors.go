@@ -19,7 +19,7 @@ var constraintToAppError = map[string]*app.Error{
 	"must_refs_user":           app.ErrOperationUserNotExists,   // операция должна ссылаться на существующего пользователя
 	"order_belongs_to_user":    app.ErrOperationOrderNotBelongs, // номер заказа может принадлежать только одному пользователю
 	"order_unique_for_op_type": app.ErrOperationOrderUsed,       // по заказу возможна 1 операция списания баллов и 1 операция зачисления баллов
-	"must_refs_promo":          app.ErrOperationPromoNotExists,  // операция зачисления по промо-кампании должна ссылаться на существующую промо-кампанию
+	"must_refs_promo":          app.ErrNotFound,                 // операция зачисления по промо-кампании должна ссылаться на существующую промо-кампанию
 	"promo_unique_for_user":    app.ErrOperationPromoUsed,       // пользователь может воспользоваться промо-кампанией не более 1 раза
 
 	"promo_code_unique":     app.ErrPromoAlreadyExists,     // промо-кампания должна иметь уникальный код

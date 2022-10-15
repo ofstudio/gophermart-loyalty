@@ -58,17 +58,11 @@ var (
 	// ErrOperationOrderUsed - по заказу возможна 1 операция списания баллов и 1 операция зачисления баллов
 	ErrOperationOrderUsed = NewError(1205, 409, "Order already used")
 
-	// ErrOperationPromoNotExists - операция зачисления по промо-кампании должна ссылаться на существующую промо-кампанию
-	ErrOperationPromoNotExists = NewError(1206, 400, "Promo not exists")
-
 	// ErrOperationPromoUsed - пользователь может воспользоваться промо-кампанией не более 1 раза
-	ErrOperationPromoUsed = NewError(1207, 409, "Promo already used")
-
-	// ErrOperationPromoExpired - промо-кампания уже не действует
-	ErrOperationPromoExpired = NewError(1208, 400, "Promo expired")
+	ErrOperationPromoUsed = NewError(1206, 409, "Promo already used")
 )
 
-// Ошибки промо-кампаний 1300-1399
+// Ошибки создания промо-кампаний 1300-1399
 var (
 	// ErrPromoAlreadyExists - промо-кампания с таким кодом уже существует
 	ErrPromoAlreadyExists = NewError(1300, 409, "Promo already exists")
