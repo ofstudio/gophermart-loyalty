@@ -2,18 +2,31 @@ package handlers
 
 import (
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/render"
+	"github.com/shopspring/decimal"
+	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/config"
 	"gophermart-loyalty/internal/logger"
 	"gophermart-loyalty/internal/usecases"
+	"io/ioutil"
+	"net/http"
+	"time"
 )
 
+var timeFmt = time.RFC3339
+
+func init() {
+	decimal.MarshalJSONWithoutQuotes = true
+}
+
+// Handlers - HTTP-хандлеры для API
 type Handlers struct {
-	useCases usecases.UseCasesInterface
+	useCases *usecases.UseCases
 	cfgAuth  *config.Auth
 	log      logger.Log
 }
 
-func NewHandlers(u usecases.UseCasesInterface, c *config.Auth, log logger.Log) *Handlers {
+func NewHandlers(u *usecases.UseCases, c *config.Auth, log logger.Log) *Handlers {
 	return &Handlers{
 		useCases: u,
 		cfgAuth:  c,
@@ -25,14 +38,30 @@ func (h *Handlers) Routes() chi.Router {
 	r := chi.NewRouter()
 	r.Post("/register", h.register)
 	r.Post("/login", h.login)
-	// todo add auth middleware
-	r.Post("/orders", h.orderAccrualCreate)
-	r.Get("/orders", h.orderAccrualList)
-	r.Post("/promos", h.promoAccrualCreate)
-	r.Get("/balance", h.balanceGet)
-	r.Get("/balance/details", h.balanceDetailsGet)
-	r.Post("/balance/withdraw", h.orderWithdrawalCreate)
-	r.Get("/balance/withdrawals", h.orderWithdrawalList)
+
+	// Доступны только авторизованным пользователям
+	r.Group(func(r chi.Router) {
+		r.Use(h.authMiddleware)
+		r.Post("/orders", h.orderAccrualCreate)
+		r.Get("/orders", h.orderAccrualList)
+		r.Post("/promos", h.promoAccrualCreate)
+		r.Get("/balance", h.balanceGet)
+		r.Post("/balance/withdraw", h.orderWithdrawalCreate)
+		r.Get("/balance/withdrawals", h.orderWithdrawalList)
+		r.Get("/balance/history", h.balanceHistoryGet)
+	})
 
 	return r
+}
+
+func decodePlainText(r *http.Request) (string, error) {
+	contentType := render.GetRequestContentType(r)
+	if contentType != render.ContentTypePlainText {
+		return "", app.ErrBadRequest
+	}
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }

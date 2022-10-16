@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/golang-jwt/jwt/v4"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"time"
 )
@@ -21,19 +22,19 @@ import (
 func (suite *handlersSuite) TestAuthMiddleware() {
 	suite.Run("success", func() {
 		token := suite.validJWTToken(1)
-		res := suite.httpRequest(http.MethodGet, "/test-auth", "", token)
+		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusOK, res.StatusCode)
 	})
 
 	suite.Run("no token", func() {
-		res := suite.httpRequest(http.MethodGet, "/test-auth", "", "")
+		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", "")
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
 
 	suite.Run("invalid token", func() {
-		res := suite.httpRequest(http.MethodGet, "/test-auth", "", "invalid token")
+		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", "invalid token")
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
@@ -47,7 +48,7 @@ func (suite *handlersSuite) TestAuthMiddleware() {
 		}
 		token := suite.generateJWTToken(claims, suite.handlers.cfgAuth.SigningAlg, "invalid key")
 
-		res := suite.httpRequest(http.MethodGet, "/test-auth", "", token)
+		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
@@ -60,7 +61,7 @@ func (suite *handlersSuite) TestAuthMiddleware() {
 			"exp": time.Now().Add(1 * time.Hour).Unix(),
 		}
 		token := suite.generateJWTToken(claims, "HS384", suite.handlers.cfgAuth.SigningKey)
-		res := suite.httpRequest(http.MethodGet, "/test-auth", "", token)
+		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
@@ -74,7 +75,7 @@ func (suite *handlersSuite) TestAuthMiddleware() {
 		}
 		token := suite.generateJWTToken(claims, suite.handlers.cfgAuth.SigningAlg, suite.handlers.cfgAuth.SigningKey)
 
-		res := suite.httpRequest(http.MethodGet, "/test-auth", "", token)
+		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
@@ -88,7 +89,7 @@ func (suite *handlersSuite) TestAuthMiddleware() {
 		}
 		token := suite.generateJWTToken(claims, suite.handlers.cfgAuth.SigningAlg, suite.handlers.cfgAuth.SigningKey)
 
-		res := suite.httpRequest(http.MethodGet, "/test-auth", "", token)
+		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
@@ -100,7 +101,7 @@ func (suite *handlersSuite) TestAuthMiddleware() {
 			"exp": time.Now().Add(1 * time.Hour).Unix(),
 		}
 		token := suite.generateJWTToken(claims, suite.handlers.cfgAuth.SigningAlg, suite.handlers.cfgAuth.SigningKey)
-		res := suite.httpRequest(http.MethodGet, "/test-auth", "", token)
+		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
@@ -113,7 +114,7 @@ func (suite *handlersSuite) TestAuthMiddleware() {
 			"exp": time.Now().Add(1 * time.Hour).Unix(),
 		}
 		token := suite.generateJWTToken(claims, suite.handlers.cfgAuth.SigningAlg, suite.handlers.cfgAuth.SigningKey)
-		res := suite.httpRequest(http.MethodGet, "/test-auth", "", token)
+		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
@@ -125,7 +126,7 @@ func (suite *handlersSuite) TestAuthMiddleware() {
 			"nbf": time.Now().Unix(),
 		}
 		token := suite.generateJWTToken(claims, suite.handlers.cfgAuth.SigningAlg, suite.handlers.cfgAuth.SigningKey)
-		res := suite.httpRequest(http.MethodGet, "/test-auth", "", token)
+		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
@@ -137,7 +138,7 @@ func (suite *handlersSuite) TestAuthMiddleware() {
 			"exp": time.Now().Add(1 * time.Hour).Unix(),
 		}
 		token := suite.generateJWTToken(claims, suite.handlers.cfgAuth.SigningAlg, suite.handlers.cfgAuth.SigningKey)
-		res := suite.httpRequest(http.MethodGet, "/test-auth", "", token)
+		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
@@ -161,4 +162,10 @@ func (suite *handlersSuite) generateJWTToken(claims jwt.Claims, alg, key string)
 	tokenString, err := token.SignedString([]byte(key))
 	suite.Require().NoError(err)
 	return tokenString
+}
+
+func (suite *handlersSuite) passHash(p string) string {
+	hash, err := bcrypt.GenerateFromPassword([]byte(p), bcrypt.DefaultCost)
+	suite.NoError(err)
+	return string(hash)
 }

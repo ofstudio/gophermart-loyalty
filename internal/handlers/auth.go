@@ -9,7 +9,9 @@ import (
 	"net/http"
 )
 
-// authMiddleware - middleware для проверки авторизации
+// authMiddleware - middleware для проверки авторизации.
+// Формат заголовка запроса:
+//    Authorization: Bearer <JWT token>
 func (h *Handlers) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -32,7 +34,7 @@ func (h *Handlers) authMiddleware(next http.Handler) http.Handler {
 // extractUserID - извлекает ID пользователя из запроса
 func (h *Handlers) extractUserID(r *http.Request) (uint64, error) {
 	// Извлекаем токен из запроса
-	token, err := h.extractToken(r)
+	token, err := h.extractJWTToken(r)
 	if err != nil {
 		return 0, err
 	}
@@ -68,8 +70,8 @@ func (h *Handlers) extractUserID(r *http.Request) (uint64, error) {
 	return userID, nil
 }
 
-// extractToken - извлекает токен из запроса и проверяет алгоритм подписи
-func (h *Handlers) extractToken(r *http.Request) (*jwt.Token, error) {
+// extractJWTToken - извлекает токен из запроса и проверяет алгоритм подписи
+func (h *Handlers) extractJWTToken(r *http.Request) (*jwt.Token, error) {
 	// Получаем JWT из заголовка запроса
 	// AuthorizationHeaderExtractor - извлекает токен из заголовка Authorization
 	// Если в заголовке пришел Bearer <token>, то извлекает только <token>
@@ -85,6 +87,15 @@ func (h *Handlers) extractToken(r *http.Request) (*jwt.Token, error) {
 
 		return []byte(h.cfgAuth.SigningKey), nil
 	})
+}
+
+// getUserID - возвращает userID из контекста
+func (h *Handlers) getUserID(ctx context.Context) (uint64, bool) {
+	id, ok := ctx.Value(ctxUserID).(uint64)
+	if !ok {
+		return 0, false
+	}
+	return id, true
 }
 
 type contextKey struct {

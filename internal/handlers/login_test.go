@@ -10,13 +10,13 @@ import (
 
 func (suite *handlersSuite) TestLogin() {
 	reqBody := `{"login":"test","password":"test"}`
+	passHash := suite.passHash("test")
 
 	suite.Run("success", func() {
-		suite.useCases.
-			On("UserCheckLoginPass", mock.Anything, "test", "test").
-			Return(&models.User{ID: 1, Login: "test"}, nil).Once()
+		suite.repo.On("UserGetByLogin", mock.Anything, "test").
+			Return(&models.User{ID: 1, Login: "test", PassHash: passHash}, nil).Once()
 
-		res := suite.httpRequest(http.MethodPost, "/login", reqBody, "")
+		res := suite.httpJSONRequest(http.MethodPost, "/login", reqBody, "")
 		defer res.Body.Close()
 		suite.Equal(http.StatusOK, res.StatusCode)
 		resJSON := suite.parseJSON(res.Body)
@@ -37,11 +37,10 @@ func (suite *handlersSuite) TestLogin() {
 	})
 
 	suite.Run("invalid login or password", func() {
-		suite.useCases.
-			On("UserCheckLoginPass", mock.Anything, "test", "test").
-			Return(nil, app.ErrUserLoginPassMismatch).Once()
+		suite.repo.On("UserGetByLogin", mock.Anything, "test").
+			Return(nil, app.ErrNotFound).Once()
 
-		res := suite.httpRequest(http.MethodPost, "/login", reqBody, "")
+		res := suite.httpJSONRequest(http.MethodPost, "/login", reqBody, "")
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 		resJSON := suite.parseJSON(res.Body)
@@ -49,7 +48,7 @@ func (suite *handlersSuite) TestLogin() {
 	})
 
 	suite.Run("invalid request body", func() {
-		res := suite.httpRequest(http.MethodPost, "/login", "invalid", "")
+		res := suite.httpJSONRequest(http.MethodPost, "/login", "invalid", "")
 		defer res.Body.Close()
 		suite.Equal(http.StatusBadRequest, res.StatusCode)
 		resJSON := suite.parseJSON(res.Body)
@@ -57,16 +56,15 @@ func (suite *handlersSuite) TestLogin() {
 	})
 
 	suite.Run("token generation error", func() {
-		suite.useCases.
-			On("UserCheckLoginPass", mock.Anything, "test", "test").
-			Return(&models.User{ID: 1, Login: "test"}, nil).Once()
+		suite.repo.On("UserGetByLogin", mock.Anything, "test").
+			Return(&models.User{ID: 1, Login: "test", PassHash: passHash}, nil).Once()
 
 		// временно подменяем алгоритм подписи токена
 		m := suite.handlers.cfgAuth.SigningAlg
 		suite.cfgAuth.SigningAlg = ""
 		defer func() { suite.handlers.cfgAuth.SigningAlg = m }()
 
-		res := suite.httpRequest(http.MethodPost, "/login", reqBody, "")
+		res := suite.httpJSONRequest(http.MethodPost, "/login", reqBody, "")
 		defer res.Body.Close()
 		suite.Equal(http.StatusInternalServerError, res.StatusCode)
 		resJSON := suite.parseJSON(res.Body)

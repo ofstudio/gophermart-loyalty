@@ -3,7 +3,6 @@ package handlers
 import (
 	"github.com/stretchr/testify/mock"
 	"gophermart-loyalty/internal/app"
-	"gophermart-loyalty/internal/models"
 	"net/http"
 )
 
@@ -11,17 +10,20 @@ func (suite *handlersSuite) TestRegister() {
 	reqBody := `{"login":"test","password":"q123456"}`
 
 	suite.Run("success", func() {
-		suite.useCases.
-			On("UserCreate", mock.Anything, "test", "q123456").
-			Return(&models.User{ID: 1, Login: "123456"}, nil).Once()
+		suite.repo.On("UserCreate", mock.Anything, mock.Anything).
+			Return(nil).Once()
 
-		res := suite.httpRequest("POST", "/register", reqBody, "")
+		res := suite.httpJSONRequest("POST", "/register", reqBody, "")
 		defer res.Body.Close()
 		suite.Equal(http.StatusCreated, res.StatusCode)
+		resJSON := suite.parseJSON(res.Body)
+		suite.Equal("Bearer", resJSON["token_type"])
+		suite.NotEmpty(resJSON["access_token"])
+		suite.Equal(60., resJSON["expires_in"])
 	})
 
 	suite.Run("failed to bind request", func() {
-		res := suite.httpRequest("POST", "/register", `{malformed json`, "")
+		res := suite.httpJSONRequest("POST", "/register", `{malformed json`, "")
 		defer res.Body.Close()
 		suite.Equal(http.StatusBadRequest, res.StatusCode)
 		resJSON := suite.parseJSON(res.Body)
@@ -29,11 +31,10 @@ func (suite *handlersSuite) TestRegister() {
 	})
 
 	suite.Run("user already exists", func() {
-		suite.useCases.
-			On("UserCreate", mock.Anything, "test", "q123456").
-			Return(nil, app.ErrUserAlreadyExists).Once()
+		suite.repo.On("UserCreate", mock.Anything, mock.Anything).
+			Return(app.ErrUserAlreadyExists).Once()
 
-		res := suite.httpRequest("POST", "/register", reqBody, "")
+		res := suite.httpJSONRequest("POST", "/register", reqBody, "")
 		defer res.Body.Close()
 		suite.Equal(http.StatusConflict, res.StatusCode)
 		resJSON := suite.parseJSON(res.Body)
@@ -41,11 +42,10 @@ func (suite *handlersSuite) TestRegister() {
 	})
 
 	suite.Run("internal error", func() {
-		suite.useCases.
-			On("UserCreate", mock.Anything, "test", "q123456").
-			Return(nil, app.ErrInternal).Once()
+		suite.repo.On("UserCreate", mock.Anything, mock.Anything).
+			Return(app.ErrInternal).Once()
 
-		res := suite.httpRequest("POST", "/register", reqBody, "")
+		res := suite.httpJSONRequest("POST", "/register", reqBody, "")
 		defer res.Body.Close()
 		suite.Equal(http.StatusInternalServerError, res.StatusCode)
 		resJSON := suite.parseJSON(res.Body)
@@ -53,11 +53,7 @@ func (suite *handlersSuite) TestRegister() {
 	})
 
 	suite.Run("invalid login", func() {
-		suite.useCases.
-			On("UserCreate", mock.Anything, "test", "q123456").
-			Return(nil, app.ErrUserLoginInvalid).Once()
-
-		res := suite.httpRequest("POST", "/register", reqBody, "")
+		res := suite.httpJSONRequest("POST", "/register", `{"login":"x","password":"q123456"}`, "")
 		defer res.Body.Close()
 		suite.Equal(http.StatusBadRequest, res.StatusCode)
 		resJSON := suite.parseJSON(res.Body)
@@ -65,11 +61,7 @@ func (suite *handlersSuite) TestRegister() {
 	})
 
 	suite.Run("invalid password", func() {
-		suite.useCases.
-			On("UserCreate", mock.Anything, "test", "q123456").
-			Return(nil, app.ErrUserPassInvalid).Once()
-
-		res := suite.httpRequest("POST", "/register", reqBody, "")
+		res := suite.httpJSONRequest("POST", "/register", `{"login":"test","password":"1"}`, "")
 		defer res.Body.Close()
 		suite.Equal(http.StatusBadRequest, res.StatusCode)
 		resJSON := suite.parseJSON(res.Body)

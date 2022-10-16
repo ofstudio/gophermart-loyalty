@@ -26,6 +26,31 @@ func (res *LoginResponse) Render(_ http.ResponseWriter, _ *http.Request) error {
 	return nil
 }
 
+// login - аутентификация пользователя.
+// Формат запроса:
+//     POST /api/user/login HTTP/1.1
+//     Content-Type: application/json
+//
+//    {
+//        "login": "<login>",
+//        "password": "<password>"
+//    }
+//
+// Возможные коды ответа:
+//    200 — пользователь успешно аутентифицирован
+//    400 — неверный формат запроса
+//    401 — неверная пара логин/пароль
+//    500 — внутренняя ошибка сервера
+//
+// Формат ответа:
+//    HTTP/1.1 200 OK
+//    Content-Type: application/json
+//
+//    {
+//        "access_token": "<token>",
+//        "token_type": "Bearer",
+//        "expires_in": 3600
+//    }
 func (h *Handlers) login(w http.ResponseWriter, r *http.Request) {
 	data := &LoginRequest{}
 	if err := render.Bind(r, data); err != nil {
@@ -55,7 +80,6 @@ func (h *Handlers) login(w http.ResponseWriter, r *http.Request) {
 		TokenType:   "Bearer",
 		ExpiresIn:   int64(h.cfgAuth.TTL.Seconds()),
 	})
-
 }
 
 // generateJWTToken - генерирует токен JWT для пользователя

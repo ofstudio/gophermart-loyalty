@@ -14,24 +14,32 @@ var (
 	ErrUnauthorized = NewErrResponse(app.ErrUnauthorized)
 )
 
-// ErrResponse - render.Renderer для ошибок
+// ErrResponse - render.Renderer для ответов с ошибками.
+// Формат ответа:
+//    HTTP/1.1 404 Not Found
+//    Content-Type: application/json
+//
+//    {
+//        "code": 1001,
+//        "message": "Not found"",
+//        "request_id": "<request id>"
+//    }
 type ErrResponse struct {
-	HTTPCode     int    `json:"-"`
-	Code         int    `json:"code,omitempty"`
-	ErrorMessage string `json:"error"`
-	RequestID    string `json:"request_id,omitempty"`
+	HTTPCode  int    `json:"-"`
+	Code      int    `json:"code,omitempty"`
+	Message   string `json:"error"`
+	RequestID string `json:"request_id,omitempty"`
 }
 
-// NewErrResponse - возвращает ErrResponse для соответствующей ошибки приложения.
 func NewErrResponse(err error) render.Renderer {
 	appErr, ok := err.(*app.Error)
 	if !ok {
 		appErr = app.ErrInternal
 	}
 	return &ErrResponse{
-		HTTPCode:     appErr.HTTPCode,
-		Code:         appErr.Code,
-		ErrorMessage: appErr.Error(),
+		HTTPCode: appErr.HTTPCode,
+		Code:     appErr.Code,
+		Message:  appErr.Error(),
 	}
 }
 
