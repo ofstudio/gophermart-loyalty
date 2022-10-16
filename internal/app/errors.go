@@ -50,7 +50,7 @@ var (
 	ErrOperationUserNotExists = NewError(1202, 404, "User not exists")
 
 	// ErrOperationOrderNumberInvalid - неверный номер заказа
-	ErrOperationOrderNumberInvalid = NewError(1203, 400, "Invalid order number")
+	ErrOperationOrderNumberInvalid = NewError(1203, 422, "Invalid order number")
 
 	// ErrOperationOrderNotBelongs - номер заказа уже был загружен другим пользователем
 	ErrOperationOrderNotBelongs = NewError(1204, 409, "Order number belongs to another user")
