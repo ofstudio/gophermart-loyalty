@@ -2,14 +2,11 @@ package repo
 
 import (
 	"context"
-	"database/sql"
 	"gophermart-loyalty/internal/models"
 )
 
-// Repo - интерфейс репозитория.
+// Repo - интерфейс репозитория
 type Repo interface {
-	// DB - возвращает соединение с БД.
-	DB() *sql.DB
 	// Close - закрывает соединение с БД.
 	Close() error
 	// UserCreate - создает пользователя по логину и хэшу пароля
