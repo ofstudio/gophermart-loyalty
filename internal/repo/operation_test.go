@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func (suite *repoSuite) TestOperationCreate() {
+func (suite *pgxRepoSuite) TestOperationCreate() {
 
 	suite.Run("OrderAccrual", func() {
 		suite.NoError(suite.repo.OperationCreate(suite.ctx(), testOA(1, "01", 100, models.StatusNew)))
@@ -42,7 +42,7 @@ func (suite *repoSuite) TestOperationCreate() {
 
 }
 
-func (suite *repoSuite) TestOperationCreate_constraints() {
+func (suite *pgxRepoSuite) TestOperationCreate_constraints() {
 
 	suite.Run("must_refs_user constraint", func() {
 		err := suite.repo.OperationCreate(suite.ctx(), testOA(1000, "10", 100, models.StatusNew))
@@ -127,7 +127,7 @@ func (suite *repoSuite) TestOperationCreate_constraints() {
 
 }
 
-func (suite *repoSuite) TestOperationGetByType() {
+func (suite *pgxRepoSuite) TestOperationGetByType() {
 
 	suite.Run("populate user 1", func() {
 		suite.NoError(suite.repo.OperationCreate(suite.ctx(), testOA(1, "10", 100, models.StatusProcessed)))
@@ -182,57 +182,7 @@ func (suite *repoSuite) TestOperationGetByType() {
 
 }
 
-func (suite *repoSuite) TestOperationGetBalance() {
-
-	suite.Run("populate user 1", func() {
-		suite.NoError(suite.repo.OperationCreate(suite.ctx(), testOA(1, "10", 100, models.StatusNew)))
-		suite.NoError(suite.repo.OperationCreate(suite.ctx(), testOA(1, "20", 100, models.StatusProcessing)))
-		suite.NoError(suite.repo.OperationCreate(suite.ctx(), testOA(1, "30", 100, models.StatusProcessed)))
-		suite.NoError(suite.repo.OperationCreate(suite.ctx(), testOA(1, "40", 100, models.StatusInvalid)))
-		suite.NoError(suite.repo.OperationCreate(suite.ctx(), testOA(1, "50", 100, models.StatusCanceled)))
-
-		suite.NoError(suite.repo.OperationCreate(suite.ctx(), testPA(1, 1, 100, models.StatusProcessed)))
-
-		suite.NoError(suite.repo.OperationCreate(suite.ctx(), testOW(1, "10", -10, models.StatusNew)))
-		suite.NoError(suite.repo.OperationCreate(suite.ctx(), testOW(1, "20", -10, models.StatusProcessing)))
-		suite.NoError(suite.repo.OperationCreate(suite.ctx(), testOW(1, "30", -10, models.StatusProcessed)))
-		suite.NoError(suite.repo.OperationCreate(suite.ctx(), testOW(1, "40", -10, models.StatusInvalid)))
-		suite.NoError(suite.repo.OperationCreate(suite.ctx(), testOW(1, "50", -10, models.StatusCanceled)))
-	})
-
-	suite.Run("populate user 2", func() {
-		suite.NoError(suite.repo.OperationCreate(suite.ctx(), testOA(2, "60", 100, models.StatusNew)))
-		suite.NoError(suite.repo.OperationCreate(suite.ctx(), testOA(2, "70", 100, models.StatusProcessing)))
-		suite.NoError(suite.repo.OperationCreate(suite.ctx(), testOA(2, "80", 100, models.StatusInvalid)))
-		suite.NoError(suite.repo.OperationCreate(suite.ctx(), testOA(2, "90", 100, models.StatusCanceled)))
-	})
-
-	suite.Run("get balance operations for user 1", func() {
-		ops, err := suite.repo.OperationGetBalance(suite.ctx(), 1)
-		suite.NoError(err)
-		suite.Len(ops, 5)
-		suite.Equal("30", *ops[0].OrderNumber)
-		suite.Equal("20", *ops[1].OrderNumber)
-		suite.Equal("10", *ops[2].OrderNumber)
-		suite.Equal(uint64(1), *ops[3].PromoID)
-		suite.Equal("30", *ops[4].OrderNumber)
-	})
-
-	suite.Run("get balance operations for user 2", func() {
-		ops, err := suite.repo.OperationGetBalance(suite.ctx(), 2)
-		suite.NoError(err)
-		suite.Len(ops, 0)
-	})
-
-	suite.Run("get balance operations for user 3", func() {
-		ops, err := suite.repo.OperationGetBalance(suite.ctx(), 3)
-		suite.NoError(err)
-		suite.Len(ops, 0)
-	})
-
-}
-
-func (suite *repoSuite) TestOperationUpdateFurther() {
+func (suite *pgxRepoSuite) TestOperationUpdateFurther() {
 
 	suite.Run("populate operations", func() {
 		// Создаем операции для 3 пользователей
@@ -268,7 +218,7 @@ func (suite *repoSuite) TestOperationUpdateFurther() {
 }
 
 // updateWorker - воркер, который обновляет операции в очереди на обновление.
-func (suite *repoSuite) updateWorker(ctx context.Context, wg *sync.WaitGroup, pid int) {
+func (suite *pgxRepoSuite) updateWorker(ctx context.Context, wg *sync.WaitGroup, pid int) {
 	defer wg.Done()
 	for {
 		select {
@@ -290,7 +240,7 @@ func (suite *repoSuite) updateWorker(ctx context.Context, wg *sync.WaitGroup, pi
 //    user_id = 1 => CANCELED
 //    user_id = 2 => INVALID
 //    user_id = 3 => PROCESSED
-func (suite *repoSuite) updateFunc(_ context.Context, op *models.Operation) error {
+func (suite *pgxRepoSuite) updateFunc(_ context.Context, op *models.Operation) error {
 	if op.Status == models.StatusNew {
 		op.Status = models.StatusProcessing
 		return nil

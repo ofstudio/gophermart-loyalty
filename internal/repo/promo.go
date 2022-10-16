@@ -19,7 +19,7 @@ var stmtPromoCreate = registerStmt(`
 `)
 
 // PromoCreate - создает промо-кампанию.
-func (r *Repo) PromoCreate(ctx context.Context, p *models.Promo) error {
+func (r *PGXRepo) PromoCreate(ctx context.Context, p *models.Promo) error {
 	err := r.stmts[stmtPromoCreate].
 		QueryRowContext(ctx, &p.Code, &p.Description, &p.Reward, &p.NotBefore, &p.NotAfter).
 		Scan(&p.ID)
@@ -38,8 +38,8 @@ var stmtPromoGetByCode = registerStmt(`
 	WHERE code = $1
 `)
 
-// PromoGetByCode - возвращает промо-кампанию по id.
-func (r *Repo) PromoGetByCode(ctx context.Context, code string) (*models.Promo, error) {
+// PromoGetByCode - возвращает промо-кампанию по ее промо-коду.
+func (r *PGXRepo) PromoGetByCode(ctx context.Context, code string) (*models.Promo, error) {
 	p := &models.Promo{}
 	err := r.stmts[stmtPromoGetByCode].
 		QueryRowContext(ctx, code).

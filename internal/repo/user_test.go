@@ -5,7 +5,7 @@ import (
 	"gophermart-loyalty/internal/models"
 )
 
-func (suite *repoSuite) TestUserCreate() {
+func (suite *pgxRepoSuite) TestUserCreate() {
 	suite.NotNil(suite.repo)
 	user := &models.User{Login: "user100", PassHash: "hash100"}
 	suite.NoError(suite.repo.UserCreate(suite.ctx(), user))
@@ -18,7 +18,7 @@ func (suite *repoSuite) TestUserCreate() {
 	suite.ErrorIs(err, app.ErrUserAlreadyExists)
 }
 
-func (suite *repoSuite) TestUserGetByLogin() {
+func (suite *pgxRepoSuite) TestUserGetByLogin() {
 	user, err := suite.repo.UserGetByLogin(suite.ctx(), "user1")
 	suite.NoError(err)
 	suite.NotNil(user)
@@ -28,7 +28,7 @@ func (suite *repoSuite) TestUserGetByLogin() {
 	suite.ErrorIs(err, app.ErrNotFound)
 }
 
-func (suite *repoSuite) TestUserGetByID() {
+func (suite *pgxRepoSuite) TestUserGetByID() {
 	user, err := suite.repo.UserGetByID(suite.ctx(), 1)
 	suite.NoError(err)
 	suite.NotNil(user)

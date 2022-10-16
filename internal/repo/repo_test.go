@@ -17,18 +17,18 @@ import (
 
 const autotestDSN = "postgres://autotest:autotest@localhost:5432/autotest"
 
-func TestRepoSuite(t *testing.T) {
-	suite.Run(t, new(repoSuite))
+func TestPGXRepoSuite(t *testing.T) {
+	suite.Run(t, new(pgxRepoSuite))
 }
 
-type repoSuite struct {
+type pgxRepoSuite struct {
 	suite.Suite
-	repo  *Repo
+	repo  *PGXRepo
 	log   logger.Log
 	stmts map[string]*sql.Stmt
 }
 
-func (suite *repoSuite) SetupSuite() {
+func (suite *pgxRepoSuite) SetupSuite() {
 	suite.log = logger.NewLogger(zerolog.DebugLevel)
 	// Если тестовая БД не запущена - пропускаем тест
 	if err := suite.isDBAvailable(autotestDSN); err != nil {
@@ -37,14 +37,14 @@ func (suite *repoSuite) SetupSuite() {
 	}
 }
 
-func (suite *repoSuite) SetupTest() {
+func (suite *pgxRepoSuite) SetupTest() {
 	//var err error
 	// Очищаем тестовую БД
 	suite.NoError(suite.clearDB(autotestDSN))
 
 	// Создаем репозиторий
 	var err error
-	suite.repo, err = NewRepo(config.DB{URI: autotestDSN, RequiredVersion: 1}, suite.log)
+	suite.repo, err = NewPGXRepo(config.DB{URI: autotestDSN, RequiredVersion: 1}, suite.log)
 	suite.NoError(err)
 
 	// Создаем пользователей
@@ -62,16 +62,16 @@ func (suite *repoSuite) SetupTest() {
 	}))
 }
 
-func (suite *repoSuite) TearDownTest() {
+func (suite *pgxRepoSuite) TearDownTest() {
 	// Закрываем соединение
 	suite.NoError(suite.repo.Close())
 }
 
-func (suite *repoSuite) ctx() context.Context {
+func (suite *pgxRepoSuite) ctx() context.Context {
 	return context.WithValue(context.Background(), middleware.RequestIDKey, suite.T().Name())
 }
 
-func (suite *repoSuite) isDBAvailable(dsn string) error {
+func (suite *pgxRepoSuite) isDBAvailable(dsn string) error {
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return err
@@ -81,7 +81,7 @@ func (suite *repoSuite) isDBAvailable(dsn string) error {
 	return db.Ping()
 }
 
-func (suite *repoSuite) clearDB(dsn string) error {
+func (suite *pgxRepoSuite) clearDB(dsn string) error {
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return err

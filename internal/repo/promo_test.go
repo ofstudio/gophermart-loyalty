@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func (suite *repoSuite) TestPromoCreate() {
+func (suite *pgxRepoSuite) TestPromoCreate() {
 
 	suite.Run("create", func() {
 		err := suite.repo.PromoCreate(suite.ctx(), testPromo("promo100", 10, time.Now(), time.Now().Add(time.Hour)))
@@ -35,7 +35,7 @@ func (suite *repoSuite) TestPromoCreate() {
 	})
 }
 
-func (suite *repoSuite) TestPromoGetByCode() {
+func (suite *pgxRepoSuite) TestPromoGetByCode() {
 	promo, err := suite.repo.PromoGetByCode(suite.ctx(), "non-existing")
 	suite.Error(err)
 	suite.ErrorIs(err, app.ErrNotFound)

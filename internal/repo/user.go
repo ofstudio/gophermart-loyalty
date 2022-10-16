@@ -17,7 +17,7 @@ var stmtUserCreate = registerStmt(`
 `)
 
 // UserCreate - создает пользователя по логину и хэшу пароля
-func (r *Repo) UserCreate(ctx context.Context, u *models.User) error {
+func (r *PGXRepo) UserCreate(ctx context.Context, u *models.User) error {
 	err := r.stmts[stmtUserCreate].
 		QueryRowContext(ctx, u.Login, u.PassHash).
 		Scan(&u.ID, &u.Balance, &u.Withdrawn, &u.CreatedAt, &u.UpdatedAt)
@@ -36,7 +36,7 @@ var stmtUserGetByID = registerStmt(`
 `)
 
 // UserGetByID - возвращает пользователя по id.
-func (r *Repo) UserGetByID(ctx context.Context, userID uint64) (*models.User, error) {
+func (r *PGXRepo) UserGetByID(ctx context.Context, userID uint64) (*models.User, error) {
 	u := &models.User{}
 	err := r.stmts[stmtUserGetByID].
 		QueryRowContext(ctx, userID).
@@ -56,7 +56,7 @@ var stmtUserGetByLogin = registerStmt(`
 `)
 
 // UserGetByLogin - возвращает пользователя по логину.
-func (r *Repo) UserGetByLogin(ctx context.Context, login string) (*models.User, error) {
+func (r *PGXRepo) UserGetByLogin(ctx context.Context, login string) (*models.User, error) {
 	u := &models.User{}
 	err := r.stmts[stmtUserGetByLogin].
 		QueryRowContext(ctx, login).
@@ -77,7 +77,7 @@ var stmtUserLock = registerStmt(`
 
 // userLockTx - блокирует пользователя для обновления другими транзакциями.
 // ВАЖНО: может вызываться только внутри транзакции
-func (r *Repo) userLockTx(ctx context.Context, tx *sql.Tx, userID uint64) error {
+func (r *PGXRepo) userLockTx(ctx context.Context, tx *sql.Tx, userID uint64) error {
 	if err := tx.Stmt(r.stmts[stmtUserLock]).
 		QueryRowContext(ctx, userID).
 		Scan(&sql.NullInt64{}); err != nil {
@@ -89,7 +89,7 @@ func (r *Repo) userLockTx(ctx context.Context, tx *sql.Tx, userID uint64) error 
 // stmtUserUpdateBalance - обновляет баланс пользователя
 //    $1 - id пользователя
 // Возвращает id пользователя.
-// ВАЖНО: может вызываться только внутри транзакции и только после вызова Repo.userLockTx
+// ВАЖНО: может вызываться только внутри транзакции и только после вызова PGXRepo.userLockTx
 var stmtUserUpdateBalance = registerStmt(`
 	WITH
 	    total_accrued AS (
@@ -111,8 +111,8 @@ var stmtUserUpdateBalance = registerStmt(`
 `)
 
 // userUpdateBalance - обновляет баланс пользователя.
-// ВАЖНО: может вызываться только внутри транзакции и только после вызова Repo.userLockTx
-func (r *Repo) userUpdateBalanceTx(ctx context.Context, tx *sql.Tx, userID uint64) error {
+// ВАЖНО: может вызываться только внутри транзакции и только после вызова PGXRepo.userLockTx
+func (r *PGXRepo) userUpdateBalanceTx(ctx context.Context, tx *sql.Tx, userID uint64) error {
 	err := tx.Stmt(r.stmts[stmtUserUpdateBalance]).
 		QueryRowContext(ctx, userID).
 		Scan(&sql.NullInt64{})

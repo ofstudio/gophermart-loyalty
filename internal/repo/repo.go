@@ -9,15 +9,15 @@ import (
 	"gophermart-loyalty/internal/repo/migrations"
 )
 
-// Repo - репозиторий для работы с Postgres.
-type Repo struct {
+// PGXRepo - репозиторий для работы с Postgres.
+type PGXRepo struct {
 	db    *sql.DB
 	log   logger.Log
 	stmts []*sql.Stmt
 }
 
-// NewRepo - создает новый репозиторий
-func NewRepo(cfg config.DB, log logger.Log) (*Repo, error) {
+// NewPGXRepo - создает новый репозиторий
+func NewPGXRepo(cfg config.DB, log logger.Log) (*PGXRepo, error) {
 	var err error
 
 	// Подключаемся к БД
@@ -45,15 +45,15 @@ func NewRepo(cfg config.DB, log logger.Log) (*Repo, error) {
 		return nil, err
 	}
 	log.Info().Msg("statements prepared")
-	return &Repo{db: db, log: log, stmts: stmts}, nil
+	return &PGXRepo{db: db, log: log, stmts: stmts}, nil
 }
 
 // DB - возвращает соединение с БД.
-func (r *Repo) DB() *sql.DB {
+func (r *PGXRepo) DB() *sql.DB {
 	return r.db
 }
 
 // Close - закрывает соединение с БД.
-func (r *Repo) Close() error {
+func (r *PGXRepo) Close() error {
 	return r.db.Close()
 }

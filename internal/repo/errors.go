@@ -27,7 +27,7 @@ var constraintToAppError = map[string]*app.Error{
 	"promo_valid_period":    app.ErrPromoPeriodInvalid,     // дата начала промо-кампании должна быть меньше даты окончания
 }
 
-func (r *Repo) handleError(ctx context.Context, err error) error {
+func (r *PGXRepo) handleError(ctx context.Context, err error) error {
 	log := r.log.WithReqID(ctx)
 
 	// Если ошибки нет, то возвращаем nil

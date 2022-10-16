@@ -17,8 +17,8 @@ import (
 //    $6 - order_number
 //    $7 - promo_id
 // Возвращает id, created_at, updated_at операции.
-// ВАЖНО: может вызываться только внутри транзакции и только после вызова Repo.userLockTx.
-// После вызова необходимо обновить баланс пользователя при помощи Repo.userUpdateBalanceTx.
+// ВАЖНО: может вызываться только внутри транзакции и только после вызова PGXRepo.userLockTx.
+// После вызова необходимо обновить баланс пользователя при помощи PGXRepo.userUpdateBalanceTx.
 var stmtOperationCreate = registerStmt(`
 	INSERT INTO operations (user_id, op_type, status, amount, description, order_number, promo_id)
 	VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -26,7 +26,7 @@ var stmtOperationCreate = registerStmt(`
 `)
 
 // OperationCreate - создает операцию и обновляет баланс пользователя.
-func (r *Repo) OperationCreate(ctx context.Context, op *models.Operation) error {
+func (r *PGXRepo) OperationCreate(ctx context.Context, op *models.Operation) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -80,8 +80,8 @@ var stmtOperationLockFurther = registerStmt(`
 `)
 
 // stmtOperationUpdate - обновляет status и amount операции.
-// ВАЖНО: может вызываться только внутри транзакции и только после вызова Repo.userLockTx.
-// После вызова необходимо обновить баланс пользователя при помощи Repo.userUpdateBalanceTx.
+// ВАЖНО: может вызываться только внутри транзакции и только после вызова PGXRepo.userLockTx.
+// После вызова необходимо обновить баланс пользователя при помощи PGXRepo.userUpdateBalanceTx.
 var stmtOperationUpdate = registerStmt(`
 	UPDATE operations
 	SET status = $2, amount = $3, updated_at = now()
@@ -92,7 +92,7 @@ var stmtOperationUpdate = registerStmt(`
 // OperationUpdateFurther - берет самую старую операцию заданного типа,
 // которая находится не в конечном статусе, вызывает для нее коллбэк updateOp, обновляет операцию
 // и обновляет баланс пользователя.
-func (r *Repo) OperationUpdateFurther(ctx context.Context, opType models.OperationType, updateFunc UpdateFunc) error {
+func (r *PGXRepo) OperationUpdateFurther(ctx context.Context, opType models.OperationType, updateFunc UpdateFunc) error {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -153,7 +153,7 @@ var stmtOperationGetByType = registerStmt(`
 `)
 
 // OperationGetByType - возвращает список операций пользователя заданного типа.
-func (r *Repo) OperationGetByType(ctx context.Context, userID uint64, t models.OperationType) ([]*models.Operation, error) {
+func (r *PGXRepo) OperationGetByType(ctx context.Context, userID uint64, t models.OperationType) ([]*models.Operation, error) {
 	rows, err := r.stmts[stmtOperationGetByType].QueryContext(ctx, userID, t)
 	if err != nil {
 		return nil, r.handleError(ctx, err)
@@ -168,38 +168,7 @@ func (r *Repo) OperationGetByType(ctx context.Context, userID uint64, t models.O
 	return ops, nil
 }
 
-// stmtOperationGetBalance - возвращает список операций пользователя, учитывающихся в балансе.
-//    $1 - user_id
-// Возвращает id, user_id, op_type, status, amount, description,
-// order_number, promo_id, created_at, updated_at операции.
-var stmtOperationGetBalance = registerStmt(`
-	SELECT id, user_id, op_type, status, amount, description, order_number, promo_id, created_at, updated_at
-	FROM operations
-	WHERE user_id = $1 AND (
-	    (status = 'PROCESSED' AND amount >= 0)
-	    OR 
-	    (status NOT IN ('INVALID', 'CANCELED') AND amount < 0)
-	)
-	ORDER BY updated_at DESC
-`)
-
-// OperationGetBalance - возвращает список операций пользователя, учитывающихся в балансе.
-func (r *Repo) OperationGetBalance(ctx context.Context, userID uint64) ([]*models.Operation, error) {
-	rows, err := r.stmts[stmtOperationGetBalance].QueryContext(ctx, userID)
-	if err != nil {
-		return nil, r.handleError(ctx, err)
-	}
-	//goland:noinspection GoUnhandledErrorResult
-	defer rows.Close()
-
-	ops, err := r.operationScanRows(ctx, rows)
-	if err != nil {
-		return nil, err
-	}
-	return ops, nil
-}
-
-func (r *Repo) operationScanRows(ctx context.Context, rows *sql.Rows) ([]*models.Operation, error) {
+func (r *PGXRepo) operationScanRows(ctx context.Context, rows *sql.Rows) ([]*models.Operation, error) {
 	var ops []*models.Operation
 	for rows.Next() {
 		select {
