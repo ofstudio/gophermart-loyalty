@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"github.com/shopspring/decimal"
 	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/models"
@@ -13,71 +12,64 @@ import (
 	"time"
 )
 
-// OrderAccrualCreate - создание начисления по заказу.
-func (u *UseCases) OrderAccrualCreate(ctx context.Context, userID uint64, orderNumber string) (*models.Operation, error) {
-	// валидируем номер заказа
-	if err := u.orderNumberValidate(ctx, orderNumber); err != nil {
+// OrderAccrualPrepare - создает модель операции начисления по заказу.
+func (u *UseCases) OrderAccrualPrepare(ctx context.Context, userID uint64, orderNumber string) (*models.Operation, error) {
+	if err := u.orderNumberValidate(orderNumber); err != nil {
+		u.log.WithReqID(ctx).Error().Err(err).Msg("invalid order number")
 		return nil, err
 	}
-	// создаем операцию
-	op := &models.Operation{
+	return &models.Operation{
 		UserID:      userID,
 		Type:        models.OrderAccrual,
 		OrderNumber: &orderNumber,
 		Status:      models.StatusNew,
 		Description: fmt.Sprintf("Начисление баллов за заказ %s", orderNumber),
-	}
-	// сохраняем в репозиторий
-	if err := u.operationCreate(ctx, op); err != nil {
-		return nil, err
-	}
-	return op, nil
+	}, nil
 }
 
-func (u *UseCases) OrderWithdrawalCreate(ctx context.Context, userID uint64, orderNumber string, amount decimal.Decimal) (*models.Operation, error) {
-	// валидируем номер заказа
-	if err := u.orderNumberValidate(ctx, orderNumber); err != nil {
+// OrderWithdrawalPrepare - создает модель операции списания по заказу.
+func (u *UseCases) OrderWithdrawalPrepare(ctx context.Context, userID uint64, orderNumber string, amount decimal.Decimal) (*models.Operation, error) {
+	if err := u.orderNumberValidate(orderNumber); err != nil {
+		u.log.WithReqID(ctx).Error().Err(err).Msg("invalid order number")
 		return nil, err
 	}
-	// создаем операцию
-	op := &models.Operation{
+	return &models.Operation{
 		UserID:      userID,
 		Type:        models.OrderWithdrawal,
 		OrderNumber: &orderNumber,
 		Status:      models.StatusNew,
 		Amount:      amount,
 		Description: fmt.Sprintf("Списание баллов за заказ %s", orderNumber),
-	}
-	// сохраняем в репозиторий
-	if err := u.operationCreate(ctx, op); err != nil {
-		return nil, err
-	}
-	return op, nil
+	}, nil
 }
 
-func (u *UseCases) PromoAccrualCreate(ctx context.Context, userID uint64, promoCode string) (*models.Operation, error) {
+// PromoAccrualPrepare - создает модель операции начисления по промо-коду.
+func (u *UseCases) PromoAccrualPrepare(ctx context.Context, userID uint64, promoCode string) (*models.Operation, error) {
 	// получаем промокод
-	promo, err := u.promoCodeValidate(promoCode)
+	promo, err := u.repo.PromoGetByCode(context.Background(), promoCode)
 	if err != nil {
+		u.log.WithReqID(ctx).Error().Err(err).Msg("failed to get promo")
 		return nil, err
 	}
-	// создаем операцию
-	op := &models.Operation{
+	// проверяем, что промокод активен в данный момент
+	now := time.Now()
+	if now.Before(promo.NotBefore) || now.After(promo.NotAfter) {
+		u.log.WithReqID(ctx).Error().Err(err).Msg("promo is not active")
+		return nil, app.ErrNotFound
+	}
+
+	return &models.Operation{
 		UserID:      userID,
 		Type:        models.PromoAccrual,
 		PromoID:     &promo.ID,
 		Amount:      promo.Reward,
 		Status:      models.StatusProcessed,
 		Description: fmt.Sprintf("Начисление баллов по промо-коду %s", promoCode),
-	}
-	// сохраняем в репозиторий
-	if err = u.repo.OperationCreate(ctx, op); err != nil {
-		return nil, err
-	}
-	return op, nil
+	}, nil
 }
 
-func (u *UseCases) operationCreate(ctx context.Context, op *models.Operation) error {
+// OperationCreate - создает операцию в репозитории.
+func (u *UseCases) OperationCreate(ctx context.Context, op *models.Operation) error {
 	if err := u.repo.OperationCreate(ctx, op); err != nil {
 		u.log.WithReqID(ctx).Error().Err(err).Msg("failed to create operation")
 		return err
@@ -98,6 +90,7 @@ func (u *UseCases) OperationGetByType(ctx context.Context, userID uint64, t mode
 	return ops, nil
 }
 
+// OperationUpdateFurther - вызывает Repo.OperationUpdateFurther.
 func (u *UseCases) OperationUpdateFurther(ctx context.Context, opType models.OperationType, updateFunc repo.UpdateFunc) error {
 	// обновляем операцию
 	var operationID uint64
@@ -113,35 +106,18 @@ func (u *UseCases) OperationUpdateFurther(ctx context.Context, opType models.Ope
 		return err
 	}
 
-	log.Info().Uint64("operation_id", operationID).Msg("operation updated")
+	u.log.WithReqID(ctx).Info().Uint64("operation_id", operationID).Msg("operation updated")
 	return nil
 }
 
-const orderNumberMaxLen = 512
-
-func (u *UseCases) orderNumberValidate(ctx context.Context, orderNumber string) error {
-	if len(orderNumber) > orderNumberMaxLen {
-		u.log.WithReqID(ctx).Error().Msg("order number is too long")
-		return app.ErrOperationOrderNumberInvalid
+// orderNumberValidate - валидирует номер заказа.
+func (u *UseCases) orderNumberValidate(orderNumber string) error {
+	const orderNumberMaxLen = 512
+	if len(orderNumber) == 0 {
+		return app.ErrBadRequest
 	}
-	if !luhn.Check(orderNumber) {
-		u.log.WithReqID(ctx).Error().Msg("order number is invalid")
+	if len(orderNumber) > orderNumberMaxLen || !luhn.Check(orderNumber) {
 		return app.ErrOperationOrderNumberInvalid
 	}
 	return nil
-}
-
-func (u *UseCases) promoCodeValidate(promoCode string) (*models.Promo, error) {
-	promo, err := u.repo.PromoGetByCode(context.Background(), promoCode)
-	if err != nil {
-		u.log.Error().Err(err).Msg("failed to get promo")
-		return nil, err
-	}
-	// проверяем, что промокод активен в данный момент
-	now := time.Now()
-	if now.Before(promo.NotBefore) || now.After(promo.NotAfter) {
-		u.log.Error().Err(err).Msg("promo is not active")
-		return nil, app.ErrNotFound
-	}
-	return promo, nil
 }

@@ -33,3 +33,11 @@ func (suite *useCasesSuite) SetupTest() {
 func (suite *useCasesSuite) ctx() context.Context {
 	return context.WithValue(context.Background(), middleware.RequestIDKey, suite.T().Name())
 }
+
+func strPtr(s string) *string {
+	return &s
+}
+
+func uint64Ptr(i uint64) *uint64 {
+	return &i
+}

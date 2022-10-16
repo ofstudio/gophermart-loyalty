@@ -1,1 +1,48 @@
 package usecases
+
+import (
+	"github.com/shopspring/decimal"
+	"github.com/stretchr/testify/mock"
+	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/models"
+	"time"
+)
+
+func (suite *useCasesSuite) TestBalanceHistoryGetByID() {
+	suite.Run("success", func() {
+		ops := []*models.Operation{
+			{
+				ID:          1,
+				UserID:      1,
+				Type:        models.OrderAccrual,
+				Status:      models.StatusNew,
+				Amount:      decimal.NewFromInt(100),
+				Description: "Начисление баллов за заказ 1",
+				CreatedAt:   time.Now(),
+				UpdatedAt:   time.Now(),
+			},
+		}
+		suite.repo.On("BalanceHistoryGetByID", mock.Anything, uint64(1)).
+			Return(ops, nil).Once()
+		history, err := suite.useCases.BalanceHistoryGetByID(suite.ctx(), uint64(1))
+		suite.NoError(err)
+		suite.Equal(ops, history)
+	})
+
+	suite.Run("no operations", func() {
+		suite.repo.On("BalanceHistoryGetByID", mock.Anything, uint64(1)).
+			Return(nil, app.ErrNotFound).Once()
+		history, err := suite.useCases.BalanceHistoryGetByID(suite.ctx(), uint64(1))
+		suite.NoError(err)
+		suite.Nil(history)
+	})
+
+	suite.Run("internal error", func() {
+		suite.repo.On("BalanceHistoryGetByID", mock.Anything, uint64(1)).
+			Return(nil, app.ErrInternal).Once()
+		history, err := suite.useCases.BalanceHistoryGetByID(suite.ctx(), uint64(1))
+		suite.ErrorIs(err, app.ErrInternal)
+		suite.Nil(history)
+	})
+
+}
