@@ -6,11 +6,11 @@ import (
 )
 
 type UseCases struct {
-	repo repo.RepoInterface
+	repo repo.Repo
 	log  logger.Log
 }
 
-func NewUseCases(repo repo.RepoInterface, log logger.Log) *UseCases {
+func NewUseCases(repo repo.Repo, log logger.Log) *UseCases {
 	return &UseCases{
 		repo: repo,
 		log:  log,

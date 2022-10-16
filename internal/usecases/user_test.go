@@ -95,7 +95,7 @@ func (suite *useCasesSuite) TestUserCheckLoginPass() {
 		suite.repo.On("UserGetByLogin", mock.Anything, "oleg").
 			Return(nil, app.ErrNotFound).Once()
 		user, err := suite.useCases.UserCheckLoginPass(suite.ctx(), "oleg", password)
-		suite.ErrorIs(err, app.ErrUnauthorized)
+		suite.ErrorIs(err, app.ErrUserLoginPassMismatch)
 		suite.Nil(user)
 	})
 
@@ -107,7 +107,7 @@ func (suite *useCasesSuite) TestUserCheckLoginPass() {
 				PassHash: string(passhash),
 			}, nil).Once()
 		user, err := suite.useCases.UserCheckLoginPass(suite.ctx(), "oleg", "wrong password")
-		suite.ErrorIs(err, app.ErrUnauthorized)
+		suite.ErrorIs(err, app.ErrUserLoginPassMismatch)
 		suite.Nil(user)
 	})
 }

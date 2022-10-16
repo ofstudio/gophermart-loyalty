@@ -17,7 +17,7 @@ func TestUseCasesSuite(t *testing.T) {
 type useCasesSuite struct {
 	suite.Suite
 	log      logger.Log
-	repo     *mocks.RepoInterface
+	repo     *mocks.Repo
 	useCases *UseCases
 }
 
@@ -26,7 +26,7 @@ func (suite *useCasesSuite) SetupSuite() {
 }
 
 func (suite *useCasesSuite) SetupTest() {
-	suite.repo = mocks.NewRepoInterface(suite.T())
+	suite.repo = mocks.NewRepo(suite.T())
 	suite.useCases = NewUseCases(suite.repo, suite.log)
 }
 
