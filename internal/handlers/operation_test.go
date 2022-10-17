@@ -16,7 +16,7 @@ func (suite *handlersSuite) TestOrderAccrualCreate() {
 		token := suite.validJWTToken(1)
 		res := suite.httpPlainTextRequest("POST", "/orders", "12345678903", token)
 		defer res.Body.Close()
-		suite.Equal(http.StatusCreated, res.StatusCode)
+		suite.Equal(http.StatusAccepted, res.StatusCode)
 	})
 
 	suite.Run("invalid order number", func() {
@@ -307,7 +307,7 @@ func (suite *handlersSuite) TestOrderWithdrawalList() {
 			}, nil).Once()
 
 		token := suite.validJWTToken(1)
-		res := suite.httpPlainTextRequest("GET", "/balance/withdrawals", "", token)
+		res := suite.httpPlainTextRequest("GET", "/withdrawals", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusOK, res.StatusCode)
 		resJSON := suite.parseJSONList(res.Body)
@@ -320,7 +320,7 @@ func (suite *handlersSuite) TestOrderWithdrawalList() {
 			Return(nil, app.ErrNotFound).Once()
 
 		token := suite.validJWTToken(1)
-		res := suite.httpPlainTextRequest("GET", "/balance/withdrawals", "", token)
+		res := suite.httpPlainTextRequest("GET", "/withdrawals", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusNoContent, res.StatusCode)
 	})
@@ -330,7 +330,7 @@ func (suite *handlersSuite) TestOrderWithdrawalList() {
 			Return(nil, app.ErrInternal).Once()
 
 		token := suite.validJWTToken(1)
-		res := suite.httpPlainTextRequest("GET", "/balance/withdrawals", "", token)
+		res := suite.httpPlainTextRequest("GET", "/withdrawals", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusInternalServerError, res.StatusCode)
 		resJSON := suite.parseJSON(res.Body)

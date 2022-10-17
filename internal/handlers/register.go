@@ -68,7 +68,7 @@ func (h *Handlers) register(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Authorization", token)
 
 	// Отправляем токен в ответе
-	render.Status(r, http.StatusCreated)
+	render.Status(r, http.StatusOK)
 	_ = render.Render(w, r, &LoginResponse{
 		AccessToken: token,
 		TokenType:   "Bearer",

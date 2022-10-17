@@ -45,9 +45,9 @@ func (h *Handlers) Routes() chi.Router {
 		r.Post("/orders", h.orderAccrualCreate)
 		r.Get("/orders", h.orderAccrualList)
 		r.Post("/promos", h.promoAccrualCreate)
+		r.Get("/withdrawals", h.orderWithdrawalList)
 		r.Get("/balance", h.balanceGet)
 		r.Post("/balance/withdraw", h.orderWithdrawalCreate)
-		r.Get("/balance/withdrawals", h.orderWithdrawalList)
 		r.Get("/balance/history", h.balanceHistoryGet)
 	})
 

@@ -15,7 +15,7 @@ func (suite *handlersSuite) TestRegister() {
 
 		res := suite.httpJSONRequest("POST", "/register", reqBody, "")
 		defer res.Body.Close()
-		suite.Equal(http.StatusCreated, res.StatusCode)
+		suite.Equal(http.StatusOK, res.StatusCode)
 		resJSON := suite.parseJSON(res.Body)
 		suite.Equal("Bearer", resJSON["token_type"])
 		suite.NotEmpty(resJSON["access_token"])

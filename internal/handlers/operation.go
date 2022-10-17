@@ -57,7 +57,7 @@ func (h *Handlers) orderAccrualCreate(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, NewErrResponse(err))
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusAccepted)
 }
 
 type OrderWithdrawalCreateRequest struct {
