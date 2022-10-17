@@ -12,6 +12,8 @@ import (
 // authMiddleware - middleware для проверки авторизации.
 // Формат заголовка запроса:
 //    Authorization: Bearer <JWT token>
+// ...либо
+//    Authorization: <JWT token>
 func (h *Handlers) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 

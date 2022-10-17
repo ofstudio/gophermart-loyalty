@@ -21,6 +21,12 @@ import (
 var log = logger.NewLogger(zerolog.InfoLevel)
 
 func main() {
+	// Контекст для остановки интеграций
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	// Сигнал для завершения приложения
+	exit := make(chan struct{})
+
 	// Читаем конфигурацию
 	cfg, err := config.Compose(config.Default, config.FromEnv, config.FromCLI)
 	if err != nil {
@@ -30,7 +36,7 @@ func main() {
 	// Создаём репозиторий, юзкейсы и интеграции
 	repository, err := repo.NewPGXRepo(&cfg.DB, log)
 	if err != nil {
-		log.Fatal().Err(err).Msg("error while creating repository")
+		log.Fatal().Err(err).Msg("failed to create repository")
 	}
 	useCases := usecases.NewUseCases(repository, log)
 	integrationAccrual := integrations.NewAccrual(&cfg.IntegrationAccrual, useCases, log)
@@ -39,7 +45,6 @@ func main() {
 	// Создаём сервер
 	h := handlers.NewHandlers(&cfg.Auth, useCases, log)
 	r := chi.NewRouter()
-	r.Use(middleware.Compress(5, "gzip"))
 	r.Use(middleware.RealIP)
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)
@@ -51,18 +56,20 @@ func main() {
 	}
 
 	// Горутина для graceful-остановки приложения
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	exit := make(chan struct{})
 	go func() {
 		stop := make(chan os.Signal, 1)
 		signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
-		<-stop
+
+		// Ждём сигнала
+		log.Warn().Stringer("signal", <-stop).Msg("stopping application")
+		// Закрываем контекст и останавливаем интеграции
 		cancel()
+		// Останавливаем сервер
 		ctxSrv, cancelSrv := context.WithTimeout(context.Background(), 1*time.Second)
 		defer cancelSrv()
 		_ = server.Shutdown(ctxSrv)
 		log.Info().Msg("server stopped")
+		// Отправляем сигнал о завершении приложения
 		close(exit)
 	}()
 
@@ -73,6 +80,8 @@ func main() {
 	if err != nil && err != http.ErrServerClosed {
 		log.Fatal().Err(err).Msg("error while starting server")
 	}
+
+	// Ждём завершения приложения
 	<-exit
 	log.Info().Msg("exiting")
 }

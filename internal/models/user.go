@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// User - модель пользователя
 type User struct {
 	ID        uint64
 	Login     string

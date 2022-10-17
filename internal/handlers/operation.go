@@ -267,7 +267,7 @@ func NewOrderWithdrawalListResponse(ops []*models.Operation) []render.Renderer {
 
 // orderWithdrawalList - получение информации о выводе средств.
 // Формат запроса:
-//    GET /api/user/balance/withdrawals HTTP/1.1
+//    GET /api/user/withdrawals HTTP/1.1
 //    Content-Length: 0
 //
 // Возможные коды ответа:

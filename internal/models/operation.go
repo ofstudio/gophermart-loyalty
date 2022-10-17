@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Operation - модель операции
 type Operation struct {
 	ID          uint64
 	UserID      uint64
@@ -14,8 +15,8 @@ type Operation struct {
 	Description string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	OrderNumber *string
-	PromoID     *uint64
+	OrderNumber *string // номер заказа, если операция связана с заказом
+	PromoID     *uint64 // id промо-кампании, если операция связана с промо-кодом
 }
 
 // OperationType - тип операции
@@ -38,6 +39,8 @@ const (
 	StatusCanceled   OperationStatus = "CANCELED"
 )
 
+// CanTransit - проверяет возможность перехода из статуса from в статус to.
+// В проекте не используется, но может пригодиться в будущем.
 func (s *OperationStatus) CanTransit(to OperationStatus) bool {
 	if *s == to {
 		return true

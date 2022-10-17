@@ -83,6 +83,7 @@ var (
 	ErrIntegrationRequestFailed = NewError(1401, 500, "Request failed")
 )
 
+// Error - ошибка приложения
 type Error struct {
 	error
 	Code     int

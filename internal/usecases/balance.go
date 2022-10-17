@@ -7,6 +7,7 @@ import (
 	"gophermart-loyalty/internal/models"
 )
 
+// BalanceHistoryGetByID - возвращает список операций пользователя, учитывающихся в балансе.
 func (u *UseCases) BalanceHistoryGetByID(ctx context.Context, userID uint64) ([]*models.Operation, error) {
 	list, err := u.repo.BalanceHistoryGetByID(ctx, userID)
 	if errors.Is(err, app.ErrNotFound) {

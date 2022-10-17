@@ -78,7 +78,7 @@ func (a *Accrual) poll(ctx context.Context) {
 	}
 }
 
-// updateFurther - запрашивает необработанные заказы по начислению баллов и обновляет их статусы
+// updateFurther - запрашивает необработанные операции по начислению баллов и обновляет их статусы
 func (a *Accrual) updateFurther(ctx context.Context) error {
 	op, err := a.useCases.OperationUpdateFurther(ctx, models.OrderAccrual, a.updateCallback)
 	if err == app.ErrNotFound {
@@ -121,9 +121,10 @@ func (a *Accrual) updateCallback(ctx context.Context, op *models.Operation) erro
 func (a *Accrual) pollTiming() time.Duration {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	// Если установлен retryAfter для повторного запроса, то используем его	для очередного запроса
 	if a.retryAfter > 0 {
 		t := a.retryAfter
-		a.retryAfter = 0 // сбрасываем retryAfter
+		a.retryAfter = 0 // сбрасываем retryAfter для последующих запросов
 		return t
 	}
 	return a.pollInterval

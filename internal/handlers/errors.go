@@ -8,7 +8,6 @@ import (
 )
 
 var (
-	ErrNotFound     = NewErrResponse(app.ErrNotFound)
 	ErrInternal     = NewErrResponse(app.ErrInternal)
 	ErrBadRequest   = NewErrResponse(app.ErrBadRequest)
 	ErrUnauthorized = NewErrResponse(app.ErrUnauthorized)

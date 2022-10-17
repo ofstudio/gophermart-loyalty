@@ -11,6 +11,7 @@ import (
 var loginValidateRe = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._\-@ ]{2,63}$`)
 var passValidateRe = regexp.MustCompile(`^.{6,512}$`)
 
+// UserCreate - создает нового пользователя.
 func (u *UseCases) UserCreate(ctx context.Context, login, password string) (*models.User, error) {
 	// валидируем логин
 	if !loginValidateRe.MatchString(login) {
@@ -46,6 +47,8 @@ func (u *UseCases) UserCreate(ctx context.Context, login, password string) (*mod
 	return user, nil
 }
 
+// UserCheckLoginPass - проверяет логин и пароль пользователя.
+// Возвращает пользователя, если логин и пароль верны.
 func (u *UseCases) UserCheckLoginPass(ctx context.Context, login, password string) (*models.User, error) {
 	// Ищем пользователя по логину
 	user, err := u.repo.UserGetByLogin(ctx, login)
@@ -62,6 +65,7 @@ func (u *UseCases) UserCheckLoginPass(ctx context.Context, login, password strin
 	return user, nil
 }
 
+// UserGetByID - возвращает пользователя по ID.
 func (u *UseCases) UserGetByID(ctx context.Context, userID uint64) (*models.User, error) {
 	user, err := u.repo.UserGetByID(ctx, userID)
 	if err != nil {

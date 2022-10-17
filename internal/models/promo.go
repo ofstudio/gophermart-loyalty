@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Promo - модель промо-кампании
 type Promo struct {
 	ID          uint64
 	Code        string

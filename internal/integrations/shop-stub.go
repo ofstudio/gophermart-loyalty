@@ -17,7 +17,9 @@ const (
 
 // ShopStub - эмулятор интеграции с магазином в части оплаты заказов баллами.
 // Реализован в качестве демонстрации.
+//
 // Переводит операции по списанию баллов в конечный статус через 1 минуту после создания операции.
+//
 // Операции с номерами заказа, начинающимися с `000`, переводятся в статус CANCELED.
 // Все остальные операции по списанию баллов переводятся в статус PROCESSED.
 type ShopStub struct {
@@ -62,7 +64,7 @@ func (s *ShopStub) poll(ctx context.Context) {
 	}
 }
 
-// updateFurther - - запрашивает необработанные заказы по списанию баллов и обновляет их статусы
+// updateFurther - запрашивает необработанные операции по списанию баллов и обновляет их статусы
 func (s *ShopStub) updateFurther(ctx context.Context) {
 	op, err := s.useCases.OperationUpdateFurther(ctx, models.OrderWithdrawal, func(ctx context.Context, op *models.Operation) error {
 		if op.OrderNumber == nil {

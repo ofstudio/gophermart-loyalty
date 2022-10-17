@@ -5,6 +5,7 @@ import (
 	"gophermart-loyalty/internal/repo"
 )
 
+// UseCases - набор бизнес-логики.
 type UseCases struct {
 	repo repo.Repo
 	log  logger.Log
