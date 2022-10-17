@@ -21,15 +21,15 @@ func init() {
 
 // Handlers - HTTP-хандлеры для API
 type Handlers struct {
-	useCases *usecases.UseCases
-	cfgAuth  *config.Auth
+	cfg      *config.Auth
 	log      logger.Log
+	useCases *usecases.UseCases
 }
 
-func NewHandlers(u *usecases.UseCases, c *config.Auth, log logger.Log) *Handlers {
+func NewHandlers(c *config.Auth, u *usecases.UseCases, log logger.Log) *Handlers {
 	return &Handlers{
 		useCases: u,
-		cfgAuth:  c,
+		cfg:      c,
 		log:      log,
 	}
 }

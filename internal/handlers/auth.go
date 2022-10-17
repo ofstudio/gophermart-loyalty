@@ -77,15 +77,15 @@ func (h *Handlers) extractJWTToken(r *http.Request) (*jwt.Token, error) {
 	// Если в заголовке пришел Bearer <token>, то извлекает только <token>
 	return request.ParseFromRequest(r, request.AuthorizationHeaderExtractor, func(token *jwt.Token) (interface{}, error) {
 		// Проверяем метод подписи токена
-		if token.Method.Alg() != h.cfgAuth.SigningAlg {
+		if token.Method.Alg() != h.cfg.SigningAlg {
 			return nil, fmt.Errorf(
 				"unsupported signing method: %v, want %v",
 				token.Method.Alg(),
-				h.cfgAuth.SigningAlg,
+				h.cfg.SigningAlg,
 			)
 		}
 
-		return []byte(h.cfgAuth.SigningKey), nil
+		return []byte(h.cfg.SigningKey), nil
 	})
 }
 

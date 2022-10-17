@@ -28,7 +28,7 @@ func (suite *handlersSuite) TestLogin() {
 
 		// проверяем токен
 		token, err := jwt.Parse(resJSON["access_token"].(string), func(token *jwt.Token) (interface{}, error) {
-			return []byte(suite.cfgAuth.SigningKey), nil
+			return []byte(suite.cfg.SigningKey), nil
 		})
 		suite.NoError(err)
 		suite.True(token.Valid)
@@ -60,9 +60,9 @@ func (suite *handlersSuite) TestLogin() {
 			Return(&models.User{ID: 1, Login: "test", PassHash: passHash}, nil).Once()
 
 		// временно подменяем алгоритм подписи токена
-		m := suite.handlers.cfgAuth.SigningAlg
-		suite.cfgAuth.SigningAlg = ""
-		defer func() { suite.handlers.cfgAuth.SigningAlg = m }()
+		m := suite.handlers.cfg.SigningAlg
+		suite.cfg.SigningAlg = ""
+		defer func() { suite.handlers.cfg.SigningAlg = m }()
 
 		res := suite.httpJSONRequest(http.MethodPost, "/login", reqBody, "")
 		defer res.Body.Close()

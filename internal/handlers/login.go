@@ -78,7 +78,7 @@ func (h *Handlers) login(w http.ResponseWriter, r *http.Request) {
 	_ = render.Render(w, r, &LoginResponse{
 		AccessToken: token,
 		TokenType:   "Bearer",
-		ExpiresIn:   int64(h.cfgAuth.TTL.Seconds()),
+		ExpiresIn:   int64(h.cfg.TTL.Seconds()),
 	})
 }
 
@@ -87,19 +87,19 @@ func (h *Handlers) generateJWTToken(userID uint64) (string, error) {
 	// Создаем claims
 	now := jwt.TimeFunc()
 	claims := jwt.MapClaims{
-		"sub": userID,                        // subject
-		"nbf": now.Unix(),                    // not before
-		"iat": now.Unix(),                    // issued at
-		"exp": now.Add(h.cfgAuth.TTL).Unix(), // expires at
+		"sub": userID,                    // subject
+		"nbf": now.Unix(),                // not before
+		"iat": now.Unix(),                // issued at
+		"exp": now.Add(h.cfg.TTL).Unix(), // expires at
 	}
 
 	// Создаем токен
-	signingMethod := jwt.GetSigningMethod(h.cfgAuth.SigningAlg)
+	signingMethod := jwt.GetSigningMethod(h.cfg.SigningAlg)
 	if signingMethod == nil {
-		return "", fmt.Errorf("unknown signing method: %s", h.cfgAuth.SigningAlg)
+		return "", fmt.Errorf("unknown signing method: %s", h.cfg.SigningAlg)
 	}
 
 	token := jwt.NewWithClaims(signingMethod, claims)
 	// Подписываем токен
-	return token.SignedString([]byte(h.cfgAuth.SigningKey))
+	return token.SignedString([]byte(h.cfg.SigningKey))
 }

@@ -28,13 +28,13 @@ type handlersSuite struct {
 	repo       *mocks.Repo
 	useCases   *usecases.UseCases
 	handlers   *Handlers
-	cfgAuth    *config.Auth
+	cfg        *config.Auth
 	testServer *httptest.Server
 }
 
 func (suite *handlersSuite) SetupSuite() {
 	suite.log = logger.NewLogger(zerolog.DebugLevel)
-	suite.cfgAuth = &config.Auth{
+	suite.cfg = &config.Auth{
 		SigningAlg: "HS256",
 		TTL:        60 * time.Second,
 		SigningKey: "test123456789012345678901234567890",
@@ -44,7 +44,7 @@ func (suite *handlersSuite) SetupSuite() {
 func (suite *handlersSuite) SetupTest() {
 	suite.repo = mocks.NewRepo(suite.T())
 	suite.useCases = usecases.NewUseCases(suite.repo, suite.log)
-	suite.handlers = NewHandlers(suite.useCases, suite.cfgAuth, suite.log)
+	suite.handlers = NewHandlers(suite.cfg, suite.useCases, suite.log)
 	r := suite.handlers.Routes()
 
 	// Дополнительный раут для тестирования авторизации

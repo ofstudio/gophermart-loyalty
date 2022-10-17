@@ -64,6 +64,6 @@ func (h *Handlers) register(w http.ResponseWriter, r *http.Request) {
 	_ = render.Render(w, r, &LoginResponse{
 		AccessToken: token,
 		TokenType:   "Bearer",
-		ExpiresIn:   int64(h.cfgAuth.TTL.Seconds()),
+		ExpiresIn:   int64(h.cfg.TTL.Seconds()),
 	})
 }
