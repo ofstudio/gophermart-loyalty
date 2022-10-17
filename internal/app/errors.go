@@ -74,6 +74,15 @@ var (
 	ErrPromoPeriodInvalid = NewError(1302, 400, "Invalid promo period")
 )
 
+// Интеграционные ошибки 1400-1499
+var (
+	// ErrIntegrationTooManyRequests - слишком много запросов к внешнему сервису
+	ErrIntegrationTooManyRequests = NewError(1400, 429, "Too many requests")
+
+	// ErrIntegrationRequestFailed - ошибка при запросе к внешнему сервису
+	ErrIntegrationRequestFailed = NewError(1401, 500, "Request failed")
+)
+
 type Error struct {
 	error
 	Code     int
