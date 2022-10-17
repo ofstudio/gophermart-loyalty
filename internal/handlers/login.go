@@ -74,6 +74,14 @@ func (h *Handlers) login(w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, ErrInternal)
 		return
 	}
+
+	// !!! ВНИМАНИЕ !!!
+	// Передача заголовка Authorization в HTTP-ответе — это нестандартная реализация,
+	// не описанная в спецификации HTTP или в каком-либо протоколе авторизации.
+	// Заголовок Authorization должен использоваться только в HTTP-запросах.
+	// Тем не менее автотесты явно требуют наличие заголовка Authorization в ответе.
+	w.Header().Set("Authorization", token)
+	
 	// Отправляем токен в ответе
 	_ = render.Render(w, r, &LoginResponse{
 		AccessToken: token,
