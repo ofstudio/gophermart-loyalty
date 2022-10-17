@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog"
 	"os"
 	"strconv"
+	"time"
 )
 
 type Log struct {
@@ -13,10 +14,15 @@ type Log struct {
 }
 
 func NewLogger(level zerolog.Level) Log {
+
 	l := zerolog.
-		New(zerolog.ConsoleWriter{Out: os.Stderr}).
+		New(zerolog.ConsoleWriter{
+			Out:        os.Stderr,
+			NoColor:    false,
+			TimeFormat: time.RFC3339,
+		}).
 		Level(level).
-		With().Caller().
+		With().Timestamp().Caller().
 		Logger()
 
 	return Log{Logger: l}
@@ -35,7 +41,7 @@ func init() {
 }
 
 // callerMarshalFunc - возвращает имя файла и имя пакета в котором вызвана функция
-func callerMarshalFunc(filepath string, line int) string {
+func callerMarshalFunc(_ uintptr, filepath string, line int) string {
 	slashCounter := 0
 	for i := len(filepath) - 1; i >= 0; i-- {
 		if filepath[i] == '/' {

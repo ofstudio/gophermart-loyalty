@@ -6,6 +6,7 @@ import (
 
 func Test_callerMarshalFunc(t *testing.T) {
 	type args struct {
+		pc       uintptr
 		filepath string
 		line     int
 	}
@@ -41,7 +42,7 @@ func Test_callerMarshalFunc(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := callerMarshalFunc(tt.args.filepath, tt.args.line); got != tt.want {
+			if got := callerMarshalFunc(tt.args.pc, tt.args.filepath, tt.args.line); got != tt.want {
 				t.Errorf("callerMarshalFunc() = %v, want %v", got, tt.want)
 			}
 		})
