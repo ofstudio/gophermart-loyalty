@@ -13,19 +13,29 @@ type Log struct {
 	zerolog.Logger
 }
 
-func NewLogger(level zerolog.Level) Log {
+func (l Log) Print(v ...interface{}) {
+	l.Logger.Info().Msgf("%v", v)
+}
 
+func NewLogger(level zerolog.Level) Log {
+	// Базовый логгер
 	l := zerolog.
 		New(zerolog.ConsoleWriter{
 			Out:        os.Stderr,
 			NoColor:    false,
 			TimeFormat: time.RFC3339,
 		}).
-		Level(level).
-		With().Timestamp().Caller().
-		Logger()
+		Level(level).With().Timestamp().Logger()
 
-	return Log{Logger: l}
+	// Логирование для HTTP-запросов через chi middleware.Logger
+	middleware.DefaultLogger = middleware.RequestLogger(
+		&middleware.DefaultLogFormatter{
+			Logger:  &Log{Logger: l},
+			NoColor: false,
+		})
+
+	// Для остального логирования используем также Caller
+	return Log{Logger: l.With().Caller().Logger()}
 }
 
 func (l Log) WithReqID(ctx context.Context) *Log {

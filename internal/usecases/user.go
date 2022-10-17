@@ -2,7 +2,6 @@ package usecases
 
 import (
 	"context"
-	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
 	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/models"
@@ -59,7 +58,7 @@ func (u *UseCases) UserCheckLoginPass(ctx context.Context, login, password strin
 	if err != nil {
 		return nil, app.ErrUserLoginPassMismatch
 	}
-	log.Debug().Msg("user found, password matched")
+	u.log.Debug().Msg("user found, password matched")
 	return user, nil
 }
 
