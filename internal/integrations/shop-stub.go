@@ -60,7 +60,7 @@ func (s *ShopStub) updateFurther(ctx context.Context) {
 			s.log.Error().Uint64("operation_id", op.ID).Msg("order number is nil")
 			return app.ErrInternal
 		}
-		if time.Now().Sub(op.CreatedAt) > time.Minute {
+		if time.Since(op.CreatedAt) > time.Minute {
 			if strings.HasPrefix(*op.OrderNumber, "000") {
 				op.Status = models.StatusCanceled
 			} else {

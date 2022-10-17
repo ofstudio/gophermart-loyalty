@@ -22,6 +22,7 @@ func (suite *handlersSuite) TestOrderAccrualCreate() {
 	suite.Run("invalid order number", func() {
 		token := suite.validJWTToken(1)
 		res := suite.httpPlainTextRequest("POST", "/orders", "invalid", token)
+		defer res.Body.Close()
 		suite.Equal(http.StatusUnprocessableEntity, res.StatusCode)
 		resJSON := suite.parseJSON(res.Body)
 		suite.Equal(1203., resJSON["code"])

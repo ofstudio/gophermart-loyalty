@@ -69,7 +69,7 @@ func (a *Accrual) poll(ctx context.Context) {
 		case <-a.timingCh:
 			// Тайминги обновлены, поэтому необходимо повторно вызвать pollTiming(),
 			// чтобы установить новый таймаут между запросами
-			break
+			continue
 		case <-time.After(a.pollTiming()):
 			go func() { _ = a.updateFurther(ctx) }()
 		}

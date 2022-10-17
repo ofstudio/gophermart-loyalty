@@ -23,7 +23,7 @@ func (suite *pgxRepoSuite) TestUserGetByLogin() {
 	suite.NoError(err)
 	suite.NotNil(user)
 	suite.Equal("user1", user.Login)
-	user, err = suite.repo.UserGetByLogin(suite.ctx(), "user1000")
+	_, err = suite.repo.UserGetByLogin(suite.ctx(), "user1000")
 	suite.Error(err)
 	suite.ErrorIs(err, app.ErrNotFound)
 }
@@ -33,7 +33,7 @@ func (suite *pgxRepoSuite) TestUserGetByID() {
 	suite.NoError(err)
 	suite.NotNil(user)
 	suite.Equal("user1", user.Login)
-	user, err = suite.repo.UserGetByID(suite.ctx(), 1000)
+	_, err = suite.repo.UserGetByID(suite.ctx(), 1000)
 	suite.Error(err)
 	suite.ErrorIs(err, app.ErrNotFound)
 }
