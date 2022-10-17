@@ -44,7 +44,7 @@ func (suite *pgxRepoSuite) SetupTest() {
 
 	// Создаем репозиторий
 	var err error
-	suite.repo, err = NewPGXRepo(config.DB{URI: autotestDSN, RequiredVersion: 1}, suite.log)
+	suite.repo, err = NewPGXRepo(&config.DB{URI: autotestDSN, RequiredVersion: 1}, suite.log)
 	suite.NoError(err)
 
 	// Создаем пользователей

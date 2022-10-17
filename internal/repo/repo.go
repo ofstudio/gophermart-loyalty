@@ -17,7 +17,7 @@ type PGXRepo struct {
 }
 
 // NewPGXRepo - создает новый репозиторий
-func NewPGXRepo(cfg config.DB, log logger.Log) (*PGXRepo, error) {
+func NewPGXRepo(cfg *config.DB, log logger.Log) (*PGXRepo, error) {
 	var err error
 
 	// Подключаемся к БД
