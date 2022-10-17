@@ -6,7 +6,7 @@ import (
 
 // Default - конфигурационная функция, возвращает конфигурацию по умолчанию.
 func Default(_ *Config) (*Config, error) {
-	secret, err := randSecret(64)
+	randomSecret, err := randSecret(64)
 	if err != nil {
 		return nil, err
 	}
@@ -18,7 +18,11 @@ func Default(_ *Config) (*Config, error) {
 		Auth: Auth{
 			SigningAlg: "HS512",
 			TTL:        30 * 24 * time.Hour,
-			SigningKey: secret,
+			SigningKey: randomSecret,
+		},
+		IntegrationAccrual: IntegrationAccrual{
+			DefaultPollInterval: 500 * time.Millisecond,
+			Timeout:             1000 * time.Millisecond,
 		},
 		RunAddress: "0.0.0.0:8080",
 	}

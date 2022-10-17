@@ -20,14 +20,21 @@ type DB struct {
 type Auth struct {
 	SigningKey string        `env:"AUTH_SECRET"` // SigningKey - ключ для подписи токена
 	SigningAlg string        // SigningAlg - алгоритм подписи JWT-токена
-	TTL        time.Duration // TTL - время жизни авторизационного токена
+	TTL        time.Duration `env:"AUTH_TTL"` // TTL - время жизни авторизационного токена
+}
+
+// IntegrationAccrual - конфигурация интеграции с системой расчёта начислений.
+type IntegrationAccrual struct {
+	Address             string        `env:"ACCRUAL_SYSTEM_ADDRESS"` // Address - адрес системы расчёта начислений
+	DefaultPollInterval time.Duration // DefaultPollInterval - интервал опроса системы расчёта начислений по умолчанию
+	Timeout             time.Duration // Timeout - таймаут запросов к системе расчёта начислений
 }
 
 type Config struct {
-	DB                   DB     // DB - конфигурация подключения к базе данных
-	Auth                 Auth   // Auth - конфигурация авторизации
-	RunAddress           string `env:"RUN_ADDRESS"`            // RunAddress - адрес и порт запуска сервиса
-	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"` // AccrualSystemAddress - адрес системы расчёта начислений
+	DB                 DB     // DB - конфигурация подключения к базе данных
+	Auth               Auth   // Auth - конфигурация авторизации
+	IntegrationAccrual        // IntegrationAccrual - конфигурация интеграции с системой расчёта начислений
+	RunAddress         string `env:"RUN_ADDRESS"` // RunAddress - адрес и порт запуска сервиса
 }
 
 // FromCLI - конфигурационная функция, которая считывает конфигурацию приложения из переменных окружения.
@@ -50,6 +57,7 @@ func fromCLI(cfg *Config, arguments ...string) (*Config, error) {
 	cli := flag.NewFlagSet("config", flag.ExitOnError)
 	cli.StringVar(&cfg.RunAddress, "a", cfg.RunAddress, "адрес и порт запуска сервиса")
 	cli.StringVar(&cfg.DB.URI, "d", cfg.DB.URI, "адрес подключения к базе данных")
+	cli.StringVar(&cfg.IntegrationAccrual.Address, "r", cfg.IntegrationAccrual.Address, "адрес системы расчёта начислений")
 	cli.DurationVar(&cfg.Auth.TTL, "t", cfg.Auth.TTL, "время жизни авторизационного токена")
 	if err := cli.Parse(arguments); err != nil {
 		return nil, err
@@ -88,8 +96,6 @@ func (c *Config) validate() error {
 	g := &errgroup.Group{}
 	g.Go(c.validateAuthSecret)
 	g.Go(c.validateServerAddr)
-	// todo validate database uri contains postgres scheme
-	// todo validate accrual system address contains http/https scheme
 	return g.Wait()
 }
 
