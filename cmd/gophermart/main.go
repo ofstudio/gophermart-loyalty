@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/httplog"
 	"github.com/rs/zerolog"
 	"gophermart-loyalty/internal/config"
 	"gophermart-loyalty/internal/handlers"
@@ -41,9 +40,9 @@ func main() {
 	h := handlers.NewHandlers(&cfg.Auth, useCases, log)
 	r := chi.NewRouter()
 	r.Use(middleware.Compress(5, "gzip"))
-	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(httplog.RequestLogger(log.Logger))
+	r.Use(middleware.RequestID)
+	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Mount("/api/user", h.Routes())
 	server := &http.Server{
