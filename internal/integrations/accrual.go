@@ -57,7 +57,9 @@ func (a *Accrual) Status() int {
 	return a.status
 }
 
-// poll - цикл обновления необработанных заказов по заданному таймингу
+// poll - цикл обновления необработанных заказов по начислению баллов.
+// Тайминг между обновлениями задается в конфигурации и может
+// адаптироваться к сервису начисления в случае ошибки HTTP 429 Too Many Requests
 func (a *Accrual) poll(ctx context.Context) {
 	a.log.Info().Msg("accrual poller started")
 	for {
@@ -76,6 +78,7 @@ func (a *Accrual) poll(ctx context.Context) {
 	}
 }
 
+// updateFurther - запрашивает необработанные заказы по начислению баллов и обновляет их статусы
 func (a *Accrual) updateFurther(ctx context.Context) error {
 	op, err := a.useCases.OperationUpdateFurther(ctx, models.OrderAccrual, a.updateCallback)
 	if err == app.ErrNotFound {
