@@ -92,11 +92,11 @@ var stmtOperationUpdate = registerStmt(`
 // OperationUpdateFurther - берет самую старую операцию заданного типа,
 // которая находится не в конечном статусе, вызывает для нее коллбэк updateOp, обновляет операцию
 // и обновляет баланс пользователя.
-func (r *PGXRepo) OperationUpdateFurther(ctx context.Context, opType models.OperationType, updateFunc UpdateFunc) error {
+func (r *PGXRepo) OperationUpdateFurther(ctx context.Context, opType models.OperationType, updateFunc UpdateFunc) (*models.Operation, error) {
 
 	tx, err := r.db.Begin()
 	if err != nil {
-		return r.handleError(ctx, err)
+		return nil, r.handleError(ctx, err)
 	}
 	//goland:noinspection ALL
 	defer tx.Rollback()
@@ -107,17 +107,17 @@ func (r *PGXRepo) OperationUpdateFurther(ctx context.Context, opType models.Oper
 		QueryRowContext(ctx, opType).
 		Scan(&op.ID, &op.UserID, &op.Type, &op.Status, &op.Amount, &op.Description, &op.OrderNumber, &op.PromoID)
 	if err != nil {
-		return r.handleError(ctx, err)
+		return nil, r.handleError(ctx, err)
 	}
 
 	// Вызываем коллбэк для обновления данных операции
 	if err = updateFunc(ctx, op); err != nil {
-		return err
+		return nil, err
 	}
 
 	// Блокируем запись пользователя для обновления
 	if err = r.userLockTx(ctx, tx, op.UserID); err != nil {
-		return err
+		return nil, err
 	}
 
 	// Обновляем операцию
@@ -125,19 +125,19 @@ func (r *PGXRepo) OperationUpdateFurther(ctx context.Context, opType models.Oper
 		QueryRowContext(ctx, op.ID, op.Status, op.Amount).
 		Scan(&sql.NullInt64{})
 	if err != nil {
-		return r.handleError(ctx, err)
+		return nil, r.handleError(ctx, err)
 	}
 
 	// Обновляем баланс пользователя
 	if err = r.userUpdateBalanceTx(ctx, tx, op.UserID); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err = tx.Commit(); err != nil {
-		return r.handleError(ctx, err)
+		return nil, r.handleError(ctx, err)
 	}
 
-	return nil
+	return op, nil
 }
 
 // stmtOperationGetByType - возвращает список операций пользователя заданного типа.

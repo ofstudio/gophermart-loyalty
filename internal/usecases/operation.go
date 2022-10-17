@@ -91,23 +91,8 @@ func (u *UseCases) OperationGetByType(ctx context.Context, userID uint64, t mode
 }
 
 // OperationUpdateFurther - вызывает Repo.OperationUpdateFurther.
-func (u *UseCases) OperationUpdateFurther(ctx context.Context, opType models.OperationType, updateFunc repo.UpdateFunc) error {
-	// обновляем операцию
-	var operationID uint64
-	err := u.repo.OperationUpdateFurther(ctx, opType, func(ctx context.Context, operation *models.Operation) error {
-		operationID = operation.ID
-		return updateFunc(ctx, operation)
-	})
-
-	if errors.Is(err, app.ErrNotFound) {
-		return nil
-	} else if err != nil {
-		u.log.WithReqID(ctx).Error().Err(err).Uint64("operation_id", operationID).Msg("failed to update operation")
-		return err
-	}
-
-	u.log.WithReqID(ctx).Info().Uint64("operation_id", operationID).Msg("operation updated")
-	return nil
+func (u *UseCases) OperationUpdateFurther(ctx context.Context, opType models.OperationType, updateFunc repo.UpdateFunc) (*models.Operation, error) {
+	return u.repo.OperationUpdateFurther(ctx, opType, updateFunc)
 }
 
 // orderNumberValidate - валидирует номер заказа.

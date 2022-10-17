@@ -226,7 +226,7 @@ func (suite *pgxRepoSuite) updateWorker(ctx context.Context, wg *sync.WaitGroup,
 			suite.T().Errorf("worker timeout: %d", pid)
 			return
 		default:
-			err := suite.repo.OperationUpdateFurther(ctx, models.OrderAccrual, suite.updateFunc)
+			_, err := suite.repo.OperationUpdateFurther(ctx, models.OrderAccrual, suite.updateFunc)
 			if errors.Is(err, app.ErrNotFound) {
 				return
 			}

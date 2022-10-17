@@ -20,7 +20,7 @@ type Repo interface {
 	// OperationUpdateFurther - берет самую старую операцию заданного типа,
 	// которая находится не в конечном статусе, вызывает для нее коллбэк updateOp, обновляет операцию
 	// и обновляет баланс пользователя.
-	OperationUpdateFurther(ctx context.Context, opType models.OperationType, updateFunc UpdateFunc) error
+	OperationUpdateFurther(ctx context.Context, opType models.OperationType, updateFunc UpdateFunc) (*models.Operation, error)
 	// OperationGetByType - возвращает список операций пользователя заданного типа.
 	OperationGetByType(ctx context.Context, userID uint64, t models.OperationType) ([]*models.Operation, error)
 	// BalanceHistoryGetByID - возвращает список операций пользователя, учитывающихся в балансе.

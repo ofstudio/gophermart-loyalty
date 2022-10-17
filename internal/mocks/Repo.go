@@ -91,17 +91,26 @@ func (_m *Repo) OperationGetByType(ctx context.Context, userID uint64, t models.
 }
 
 // OperationUpdateFurther provides a mock function with given fields: ctx, opType, updateFunc
-func (_m *Repo) OperationUpdateFurther(ctx context.Context, opType models.OperationType, updateFunc repo.UpdateFunc) error {
+func (_m *Repo) OperationUpdateFurther(ctx context.Context, opType models.OperationType, updateFunc repo.UpdateFunc) (*models.Operation, error) {
 	ret := _m.Called(ctx, opType, updateFunc)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, models.OperationType, repo.UpdateFunc) error); ok {
+	var r0 *models.Operation
+	if rf, ok := ret.Get(0).(func(context.Context, models.OperationType, repo.UpdateFunc) *models.Operation); ok {
 		r0 = rf(ctx, opType, updateFunc)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*models.Operation)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, models.OperationType, repo.UpdateFunc) error); ok {
+		r1 = rf(ctx, opType, updateFunc)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // PromoCreate provides a mock function with given fields: ctx, p

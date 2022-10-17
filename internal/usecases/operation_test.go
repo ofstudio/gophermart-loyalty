@@ -202,29 +202,21 @@ func (suite *useCasesSuite) TestOperationUpdateFurther() {
 		}
 
 		suite.repo.On("OperationUpdateFurther", mock.Anything, models.OrderAccrual, mock.AnythingOfType("repo.UpdateFunc")).
-			Return(nil).Once().
+			Return(&models.Operation{}, nil).Once().
 			Run(func(args mock.Arguments) {
 				updateFunc(suite.ctx(), op)
 			})
 
-		err := suite.useCases.OperationUpdateFurther(suite.ctx(), models.OrderAccrual, updateFunc)
+		_, err := suite.useCases.OperationUpdateFurther(suite.ctx(), models.OrderAccrual, updateFunc)
 		suite.NoError(err)
 		suite.Equal(models.StatusProcessed, op.Status)
 	})
 
-	suite.Run("no more further operations to update", func() {
-		suite.repo.On("OperationUpdateFurther", mock.Anything, models.OrderAccrual, mock.AnythingOfType("repo.UpdateFunc")).
-			Return(app.ErrNotFound).Once()
-
-		err := suite.useCases.OperationUpdateFurther(suite.ctx(), models.OrderAccrual, nil)
-		suite.NoError(err)
-	})
-
 	suite.Run("internal error", func() {
 		suite.repo.On("OperationUpdateFurther", mock.Anything, models.OrderAccrual, mock.AnythingOfType("repo.UpdateFunc")).
-			Return(app.ErrInternal).Once()
+			Return(nil, app.ErrInternal).Once()
 
-		err := suite.useCases.OperationUpdateFurther(suite.ctx(), models.OrderAccrual, nil)
+		_, err := suite.useCases.OperationUpdateFurther(suite.ctx(), models.OrderAccrual, nil)
 		suite.ErrorIs(err, app.ErrInternal)
 	})
 }
