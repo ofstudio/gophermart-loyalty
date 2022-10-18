@@ -5,8 +5,8 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=autotest
-      - POSTGRES_PASSWORD=autotest
-      - POSTGRES_DB=autotest
+      POSTGRES_USER: autotest
+      POSTGRES_PASSWORD: autotest
+      POSTGRES_DB: autotest
     volumes:
       - ../../testdata/autotest-postgres:/var/lib/postgresql/data
