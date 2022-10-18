@@ -72,7 +72,7 @@ func (o *OrderWithdrawalCreateRequest) Bind(_ *http.Request) error {
 
 // orderWithdrawalCreate - создание операции списания бонусов.
 // Формат запроса:
-//    POST /api/user/withdraw HTTP/1.1
+//    POST /api/user/balance/withdraw HTTP/1.1
 //    Content-Type: application/json
 //
 //    {
@@ -243,9 +243,10 @@ func (h *Handlers) orderAccrualList(w http.ResponseWriter, r *http.Request) {
 }
 
 type OrderWithdrawalListResponse struct {
-	OrderNumber *string         `json:"order"`
-	Amount      decimal.Decimal `json:"sum"`
-	UpdatedAt   time.Time       `json:"processed_at"`
+	OrderNumber *string                `json:"order"`
+	Status      models.OperationStatus `json:"status"`
+	Amount      decimal.Decimal        `json:"sum"`
+	UpdatedAt   time.Time              `json:"processed_at"`
 }
 
 func (o *OrderWithdrawalListResponse) Render(_ http.ResponseWriter, _ *http.Request) error {
@@ -258,6 +259,7 @@ func NewOrderWithdrawalListResponse(ops []*models.Operation) []render.Renderer {
 	for i, op := range ops {
 		list[i] = &OrderWithdrawalListResponse{
 			OrderNumber: op.OrderNumber,
+			Status:      op.Status,
 			Amount:      op.Amount,
 			UpdatedAt:   op.UpdatedAt,
 		}

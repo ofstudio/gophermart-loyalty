@@ -44,10 +44,10 @@ func (h *Handlers) Routes() chi.Router {
 		r.Use(h.authMiddleware)
 		r.Post("/orders", h.orderAccrualCreate)
 		r.Get("/orders", h.orderAccrualList)
-		r.Post("/promos", h.promoAccrualCreate)
-		r.Get("/withdrawals", h.orderWithdrawalList)
-		r.Get("/balance", h.balanceGet)
 		r.Post("/balance/withdraw", h.orderWithdrawalCreate)
+		r.Get("/withdrawals", h.orderWithdrawalList)
+		r.Post("/promos", h.promoAccrualCreate)
+		r.Get("/balance", h.balanceGet)
 		r.Get("/balance/history", h.balanceHistoryGet)
 	})
 
