@@ -77,6 +77,8 @@ func (s *ShopStub) updateFurther(ctx context.Context) {
 			} else {
 				op.Status = models.StatusProcessed
 			}
+		} else {
+			return app.ErrNotFound
 		}
 		return nil
 	})
