@@ -71,7 +71,7 @@ type UpdateFunc func(ctx context.Context, operation *models.Operation) error
 // Возвращает id, user_id, op_type, status, amount, description, order_number, promo_id операции.
 // ВАЖНО: может вызываться только внутри транзакции.
 var stmtOperationLockFurther = registerStmt(`
-		SELECT id, user_id, op_type, status, amount, description, order_number, promo_id
+		SELECT id, user_id, op_type, status, amount, description, order_number, promo_id, created_at, updated_at
 		FROM operations 
 		WHERE status IN ('NEW', 'PROCESSING') AND op_type = $1
 		ORDER BY updated_at
@@ -105,7 +105,18 @@ func (r *PGXRepo) OperationUpdateFurther(ctx context.Context, opType models.Oper
 	op := &models.Operation{}
 	err = tx.Stmt(r.stmts[stmtOperationLockFurther]).
 		QueryRowContext(ctx, opType).
-		Scan(&op.ID, &op.UserID, &op.Type, &op.Status, &op.Amount, &op.Description, &op.OrderNumber, &op.PromoID)
+		Scan(
+			&op.ID,
+			&op.UserID,
+			&op.Type,
+			&op.Status,
+			&op.Amount,
+			&op.Description,
+			&op.OrderNumber,
+			&op.PromoID,
+			&op.CreatedAt,
+			&op.UpdatedAt,
+		)
 	if err != nil {
 		return nil, r.handleError(ctx, err)
 	}
