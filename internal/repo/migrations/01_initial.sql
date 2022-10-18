@@ -1,27 +1,41 @@
 --------------------------------------------------------------------------------
 -- +goose Up
 --------------------------------------------------------------------------------
+
+BEGIN;
+LOCK TABLE pg_extension;
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
--- Типы операций
-CREATE TYPE operation_type AS ENUM (
-    'order_accrual',
-    'order_withdrawal',
-    'promo_accrual'
-    );
+-- Создаем типы данных
+-- +goose StatementBegin
+DO
+$$
+    BEGIN
+        -- Типы операций
+        IF NOT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'operation_type') THEN
+            CREATE TYPE operation_type AS ENUM (
+                'order_accrual',
+                'order_withdrawal',
+                'promo_accrual'
+                );
+        END IF;
 
--- Статусы заказа
-CREATE TYPE operation_status AS ENUM (
-    'NEW',
-    'PROCESSING',
-    'PROCESSED',
-    'INVALID',
-    'CANCELED'
-    );
-
+        -- Статусы заказа
+        IF NOT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'operation_status') THEN
+            CREATE TYPE operation_status AS ENUM (
+                'NEW',
+                'PROCESSING',
+                'PROCESSED',
+                'INVALID',
+                'CANCELED'
+                );
+        END IF;
+    END
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd
 
 -- Пользователи
-CREATE TABLE users
+CREATE TABLE IF NOT EXISTS users
 (
     id         INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     username   VARCHAR(256)   NOT NULL,
@@ -36,7 +50,7 @@ CREATE TABLE users
 );
 
 -- Промо-кампании
-CREATE TABLE promos
+CREATE TABLE IF NOT EXISTS promos
 (
     id          INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     code        VARCHAR(64)    NOT NULL,
@@ -52,10 +66,11 @@ CREATE TABLE promos
 
 INSERT INTO promos (code, description, reward, not_before, not_after)
 VALUES ('WELCOME-GOPHER', 'Приветственный бонус', 20, '2020-01-01', '2025-01-01'),
-       ('GOLANG-2021', 'В честь дня рождения Go', 10, '2021-10-10', '2021-10-11');
+       ('GOLANG-2021', 'В честь дня рождения Go', 10, '2021-10-10', '2021-10-11')
+ON CONFLICT DO NOTHING;
 
 -- Операции
-CREATE TABLE operations
+CREATE TABLE IF NOT EXISTS operations
 (
     id           INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     user_id      INTEGER          NOT NULL,
@@ -86,16 +101,18 @@ CREATE TABLE operations
         )
 );
 
-CREATE INDEX total_accrued_idx ON operations (user_id)
+CREATE INDEX IF NOT EXISTS total_accrued_idx ON operations (user_id)
     INCLUDE (amount)
     WHERE status = 'PROCESSED' AND amount >= 0;
 
-CREATE INDEX total_withdrawn_idx ON operations (user_id)
+CREATE INDEX IF NOT EXISTS total_withdrawn_idx ON operations (user_id)
     INCLUDE (amount)
     WHERE status NOT IN ('INVALID', 'CANCELED') AND amount < 0;
 
-CREATE INDEX update_further_idx on operations (op_type, updated_at ASC)
+CREATE INDEX IF NOT EXISTS update_further_idx on operations (op_type, updated_at ASC)
     WHERE status IN ('NEW', 'PROCESSING');
+
+COMMIT;
 
 --------------------------------------------------------------------------------
 -- +goose Down
@@ -103,5 +120,8 @@ CREATE INDEX update_further_idx on operations (op_type, updated_at ASC)
 DROP TABLE IF EXISTS operations;
 DROP TABLE IF EXISTS promos;
 DROP TABLE IF EXISTS users;
+DROP INDEX IF EXISTS total_accrued_idx;
+DROP INDEX IF EXISTS total_withdrawn_idx;
+DROP INDEX IF EXISTS update_further_idx;
 DROP TYPE IF EXISTS operation_status;
 DROP TYPE IF EXISTS operation_type;
