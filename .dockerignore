@@ -1,0 +1,11 @@
+.git
+.idea
+.gitignore
+.github
+.env
+*.md
+cmd/accrual
+docker
+docs
+scripts
+testdata

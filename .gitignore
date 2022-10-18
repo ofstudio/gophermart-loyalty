@@ -24,3 +24,6 @@ vendor/
 
 # test-data directory
 testdata
+
+# Environment variables
+.env
