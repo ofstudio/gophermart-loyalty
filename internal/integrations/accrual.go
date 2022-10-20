@@ -40,7 +40,7 @@ func NewAccrual(c *config.IntegrationAccrual, u *usecases.UseCases, log logger.L
 		status:       AccrualStopped,
 		useCases:     u,
 		log:          log,
-		pollInterval: c.DefaultPollInterval,
+		pollInterval: c.PollInterval,
 		retryAfter:   0,
 		timingCh:     make(chan struct{}),
 		client:       newAccrualClient(c.Address+"/api/orders/", c.Timeout),

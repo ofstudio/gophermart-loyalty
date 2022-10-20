@@ -21,8 +21,8 @@ func Default(_ *Config) (*Config, error) {
 			SigningKey: randomSecret,
 		},
 		IntegrationAccrual: IntegrationAccrual{
-			DefaultPollInterval: 500 * time.Millisecond,
-			Timeout:             1000 * time.Millisecond,
+			PollInterval: 500 * time.Millisecond,
+			Timeout:      1000 * time.Millisecond,
 		},
 		RunAddress: "0.0.0.0:8080",
 	}

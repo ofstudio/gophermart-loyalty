@@ -25,9 +25,9 @@ type Auth struct {
 
 // IntegrationAccrual - конфигурация интеграции с системой расчёта начислений.
 type IntegrationAccrual struct {
-	Address             string        `env:"ACCRUAL_SYSTEM_ADDRESS"` // Address - адрес системы расчёта начислений
-	DefaultPollInterval time.Duration // DefaultPollInterval - интервал опроса системы расчёта начислений по умолчанию
-	Timeout             time.Duration // Timeout - таймаут запросов к системе расчёта начислений
+	Address      string        `env:"ACCRUAL_SYSTEM_ADDRESS"`       // Address - адрес системы расчёта начислений
+	PollInterval time.Duration `env:"ACCRUAL_SYSTEM_POLL_INTERVAL"` // PollInterval - интервал опроса системы расчёта начислений
+	Timeout      time.Duration `env:"ACCRUAL_SYSTEM_TIMEOUT"`       // Timeout - таймаут запросов к системе расчёта начислений
 }
 
 type Config struct {
@@ -43,6 +43,8 @@ type Config struct {
 //    -a <host:port> - адрес и порт запуска сервиса
 //	  -d <dsn>       - адрес подключения к базе данных
 //    -r <url>       - адрес системы расчёта начислений
+//    -p <duration>  - интервал опроса системы расчёта начислений
+//    -m <duration>  - таймаут запросов к системе расчёта начислений
 //    -t <duration>  - время жизни авторизационного токена
 //
 // Если какие-либо значения не заданы в командной строке, то используются значения переданные в cfg.
@@ -58,6 +60,8 @@ func fromCLI(cfg *Config, arguments ...string) (*Config, error) {
 	cli.StringVar(&cfg.RunAddress, "a", cfg.RunAddress, "адрес и порт запуска сервиса")
 	cli.StringVar(&cfg.DB.URI, "d", cfg.DB.URI, "адрес подключения к базе данных")
 	cli.StringVar(&cfg.IntegrationAccrual.Address, "r", cfg.IntegrationAccrual.Address, "адрес системы расчёта начислений")
+	cli.DurationVar(&cfg.IntegrationAccrual.PollInterval, "p", cfg.IntegrationAccrual.PollInterval, "интервал опроса системы расчёта начислений")
+	cli.DurationVar(&cfg.IntegrationAccrual.Timeout, "m", cfg.IntegrationAccrual.Timeout, "таймаут запросов к системе расчёта начислений")
 	cli.DurationVar(&cfg.Auth.TTL, "t", cfg.Auth.TTL, "время жизни авторизационного токена")
 	if err := cli.Parse(arguments); err != nil {
 		return nil, err
@@ -72,11 +76,13 @@ func fromCLI(cfg *Config, arguments ...string) (*Config, error) {
 // FromEnv - конфигурационная функция, которая читывает конфигурацию приложения из переменных окружения.
 //
 // Переменные окружения:
-//    RUN_ADDRESS            - адрес и порт запуска сервиса
-//    DATABASE_URI           - адрес подключения к базе данных
-//    ACCRUAL_SYSTEM_ADDRESS - адрес системы расчёта начислений
-//    AUTH_TTL               - время жизни авторизационного токена
-//	  AUTH_SECRET            - секретный ключ для подписи авторизационного токена
+//    RUN_ADDRESS                  - адрес и порт запуска сервиса
+//    DATABASE_URI                 - адрес подключения к базе данных
+//    ACCRUAL_SYSTEM_ADDRESS       - адрес системы расчёта начислений
+//    ACCRUAL_SYSTEM_TIMEOUT       - таймаут запросов к системе расчёта начислений
+//    ACCRUAL_SYSTEM_POLL_INTERVAL - интервал опроса системы расчёта начислений
+//    AUTH_TTL                     - время жизни авторизационного токена
+//    AUTH_SECRET                  - секретный ключ для подписи авторизационного токена
 //
 // Если какие-либо переменные окружения не заданы, то используются значения переданные в cfg.
 func FromEnv(cfg *Config) (*Config, error) {

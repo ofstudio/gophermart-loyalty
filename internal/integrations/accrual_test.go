@@ -176,9 +176,9 @@ func (suite *accrualSuite) SetupTest() {
 	suite.repo = mocks.NewRepo(suite.T())
 	suite.useCases = usecases.NewUseCases(suite.repo, suite.log)
 	cfg := &config.IntegrationAccrual{
-		Address:             suite.testServer.URL,
-		DefaultPollInterval: testPollInterval,
-		Timeout:             testTimeout,
+		Address:      suite.testServer.URL,
+		PollInterval: testPollInterval,
+		Timeout:      testTimeout,
 	}
 	suite.accrual = NewAccrual(cfg, suite.useCases, suite.log)
 }
