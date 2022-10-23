@@ -18,7 +18,7 @@ type configSuite struct {
 
 func (suite *configSuite) TestConfig() {
 	suite.Run("success from cli", func() {
-		cfg, err := Compose(Default)
+		cfg, err := Compose(NewDefault)
 		suite.NoError(err)
 		suite.NotNil(cfg)
 		args := []string{
@@ -39,7 +39,7 @@ func (suite *configSuite) TestConfig() {
 
 	suite.Run("success from env", func() {
 		os.Clearenv()
-		cfg, err := Compose(Default)
+		cfg, err := Compose(NewDefault)
 		suite.NoError(err)
 		suite.NotNil(cfg)
 
@@ -49,7 +49,7 @@ func (suite *configSuite) TestConfig() {
 		_ = os.Setenv("AUTH_TTL", "2h")
 		_ = os.Setenv("AUTH_SECRET", "<this is secret>")
 
-		cfg, err = FromEnv(cfg)
+		cfg, err = NewFromEnv(cfg)
 		suite.NoError(err)
 		suite.NotNil(cfg)
 		suite.Equal("0.0.0.0:9000", cfg.RunAddress)

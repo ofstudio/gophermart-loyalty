@@ -4,8 +4,8 @@ import (
 	"time"
 )
 
-// Default - конфигурационная функция, возвращает конфигурацию по умолчанию.
-func Default(_ *Config) (*Config, error) {
+// NewDefault - конфигурационная функция, возвращает конфигурацию по умолчанию.
+func NewDefault(_ *Config) (*Config, error) {
 	randomSecret, err := randSecret(64)
 	if err != nil {
 		return nil, err

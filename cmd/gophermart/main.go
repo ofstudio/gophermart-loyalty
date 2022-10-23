@@ -17,7 +17,7 @@ func main() {
 	log := logger.NewLogger(zerolog.InfoLevel)
 
 	// Читаем конфигурацию
-	cfg, err := config.Compose(config.Default, config.FromEnv, config.FromCLI)
+	cfg, err := config.Compose(config.NewDefault, config.NewFromEnv, config.NewFromCLI)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error while loading config")
 	}

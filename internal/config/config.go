@@ -38,7 +38,7 @@ type Config struct {
 	RunAddress         string `env:"RUN_ADDRESS"` // RunAddress - адрес и порт запуска сервиса
 }
 
-// FromCLI - конфигурационная функция, которая считывает конфигурацию приложения из переменных окружения.
+// NewFromCLI - конфигурационная функция, которая считывает конфигурацию приложения из переменных окружения.
 //
 // Флаги командной строки:
 //    -a <host:port> - адрес и порт запуска сервиса
@@ -49,11 +49,11 @@ type Config struct {
 //    -t <duration>  - время жизни авторизационного токена
 //
 // Если какие-либо значения не заданы в командной строке, то используются значения переданные в cfg.
-func FromCLI(cfg *Config) (*Config, error) {
+func NewFromCLI(cfg *Config) (*Config, error) {
 	return fromCLI(cfg, os.Args[1:]...)
 }
 
-// fromCLI - логика для FromCLI.
+// fromCLI - логика для NewFromCLI.
 // Вынесена отдельно в целях тестирования.
 func fromCLI(cfg *Config, arguments ...string) (*Config, error) {
 	// Парсим командную строку
@@ -74,7 +74,7 @@ func fromCLI(cfg *Config, arguments ...string) (*Config, error) {
 	return cfg, nil
 }
 
-// FromEnv - конфигурационная функция, которая читывает конфигурацию приложения из переменных окружения.
+// NewFromEnv - конфигурационная функция, которая читывает конфигурацию приложения из переменных окружения.
 //
 // Переменные окружения:
 //    RUN_ADDRESS                  - адрес и порт запуска сервиса
@@ -86,7 +86,7 @@ func fromCLI(cfg *Config, arguments ...string) (*Config, error) {
 //    AUTH_SECRET                  - секретный ключ для подписи авторизационного токена
 //
 // Если какие-либо переменные окружения не заданы, то используются значения переданные в cfg.
-func FromEnv(cfg *Config) (*Config, error) {
+func NewFromEnv(cfg *Config) (*Config, error) {
 	// Получаем параметры из окружения
 	err := env.Parse(cfg)
 	if err != nil {
