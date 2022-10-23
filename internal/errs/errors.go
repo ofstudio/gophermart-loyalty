@@ -5,8 +5,10 @@ import (
 	"errors"
 )
 
-// Общие ошибки приложения 1000-1099
 var (
+
+	// === Общие ошибки приложения (1000-1099) ===
+
 	// ErrInternal - внутренняя ошибка сервера
 	ErrInternal = NewError(1000, 500, "Internal error")
 	// ErrNotFound - не найдено
@@ -15,10 +17,9 @@ var (
 	ErrUnauthorized = NewError(1002, 401, "Unauthorized")
 	// ErrBadRequest - неверный запрос
 	ErrBadRequest = NewError(1003, 400, "Bad request")
-)
 
-// Ошибки пользователя 1100-1199
-var (
+	// === Ошибки пользователя (1100-1199) ===
+
 	// ErrUserAlreadyExists - логин должен быть уникальным
 	ErrUserAlreadyExists = NewError(1100, 409, "User already exists")
 
@@ -36,10 +37,9 @@ var (
 
 	// ErrUserWithdrawnNegative - общая сумма списаний не может быть отрицательной
 	ErrUserWithdrawnNegative = NewError(1106, 500, "Withdrawn amount cannot be negative")
-)
 
-// Ошибки операций 1200-1299
-var (
+	// === Ошибки операций (1200-1299) ===
+
 	// ErrOperationAttrsInvalid - аттрибуты операции должны соответствовать типу операции
 	ErrOperationAttrsInvalid = NewError(1200, 500, "Invalid operation attributes")
 
@@ -60,10 +60,9 @@ var (
 
 	// ErrOperationPromoUsed - пользователь может воспользоваться промо-кампанией не более 1 раза
 	ErrOperationPromoUsed = NewError(1206, 409, "Promo already used")
-)
 
-// Ошибки создания промо-кампаний 1300-1399
-var (
+	// === Ошибки создания промо-кампаний (1300-1399) ===
+
 	// ErrPromoAlreadyExists - промо-кампания с таким кодом уже существует
 	ErrPromoAlreadyExists = NewError(1300, 409, "Promo already exists")
 
@@ -72,10 +71,9 @@ var (
 
 	// ErrPromoPeriodInvalid - дата начала промо-кампании должна быть меньше даты окончания промо
 	ErrPromoPeriodInvalid = NewError(1302, 400, "Invalid promo period")
-)
 
-// Интеграционные ошибки 1400-1499
-var (
+	// === Интеграционные ошибки (1400-1499) ===
+
 	// ErrIntegrationTooManyRequests - слишком много запросов к внешнему сервису
 	ErrIntegrationTooManyRequests = NewError(1400, 429, "Too many requests")
 
