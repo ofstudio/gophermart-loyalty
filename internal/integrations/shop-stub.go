@@ -2,12 +2,13 @@ package integrations
 
 import (
 	"context"
+	"strings"
+	"time"
+
 	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/logger"
 	"gophermart-loyalty/internal/models"
 	"gophermart-loyalty/internal/usecases"
-	"strings"
-	"time"
 )
 
 const (

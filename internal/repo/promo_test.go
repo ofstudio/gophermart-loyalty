@@ -1,8 +1,9 @@
 package repo
 
 import (
-	"gophermart-loyalty/internal/app"
 	"time"
+
+	"gophermart-loyalty/internal/app"
 )
 
 func (suite *pgxRepoSuite) TestPromoCreate() {

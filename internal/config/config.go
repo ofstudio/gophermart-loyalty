@@ -3,11 +3,12 @@ package config
 import (
 	"flag"
 	"fmt"
-	"github.com/caarlos0/env/v6"
-	"golang.org/x/sync/errgroup"
 	"net"
 	"os"
 	"time"
+
+	"github.com/caarlos0/env/v6"
+	"golang.org/x/sync/errgroup"
 )
 
 // DB - конфигурация подключения к базе данных.

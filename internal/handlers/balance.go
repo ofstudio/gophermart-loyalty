@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"errors"
+	"net/http"
+
 	"github.com/go-chi/render"
 	"github.com/shopspring/decimal"
+
 	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/models"
-	"net/http"
 )
 
 type BalanceResponse struct {

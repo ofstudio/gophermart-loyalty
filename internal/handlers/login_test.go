@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/mock"
+
 	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/models"
-	"net/http"
 )
 
 func (suite *handlersSuite) TestLogin() {

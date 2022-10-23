@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+
 	"github.com/jackc/pgconn"
+
 	"gophermart-loyalty/internal/app"
 )
 

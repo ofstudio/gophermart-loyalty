@@ -2,12 +2,14 @@ package usecases
 
 import (
 	"context"
+	"time"
+
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/mock"
+
 	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/models"
 	"gophermart-loyalty/internal/repo"
-	"time"
 )
 
 func (suite *useCasesSuite) TestOrderAccrualPrepare() {

@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/shopspring/decimal"
+
 	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/models"
 	"gophermart-loyalty/internal/repo"
 	"gophermart-loyalty/pkg/luhn"
-	"time"
 )
 
 // OrderAccrualPrepare - создает модель операции начисления по заказу.

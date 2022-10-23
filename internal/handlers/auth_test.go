@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	"github.com/golang-jwt/jwt/v4"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"time"
+
+	"github.com/golang-jwt/jwt/v4"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // - [x] Успешная авторизация

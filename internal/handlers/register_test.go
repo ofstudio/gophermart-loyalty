@@ -1,9 +1,11 @@
 package handlers
 
 import (
-	"github.com/stretchr/testify/mock"
-	"gophermart-loyalty/internal/app"
 	"net/http"
+
+	"github.com/stretchr/testify/mock"
+
+	"gophermart-loyalty/internal/app"
 )
 
 func (suite *handlersSuite) TestRegister() {

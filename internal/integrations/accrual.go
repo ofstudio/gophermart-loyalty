@@ -4,18 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/shopspring/decimal"
-	"gophermart-loyalty/internal/app"
-	"gophermart-loyalty/internal/config"
-	"gophermart-loyalty/internal/logger"
-	"gophermart-loyalty/internal/models"
-	"gophermart-loyalty/internal/usecases"
 	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/shopspring/decimal"
+
+	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/config"
+	"gophermart-loyalty/internal/logger"
+	"gophermart-loyalty/internal/models"
+	"gophermart-loyalty/internal/usecases"
 )
 
 const (

@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/shopspring/decimal"
-	"gophermart-loyalty/internal/app"
-	"gophermart-loyalty/internal/models"
 	"sync"
 	"time"
+
+	"github.com/shopspring/decimal"
+
+	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/models"
 )
 
 func (suite *pgxRepoSuite) TestOperationCreate() {

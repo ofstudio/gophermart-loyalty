@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
+
 	"gophermart-loyalty/internal/app"
-	"net/http"
 )
 
 var (

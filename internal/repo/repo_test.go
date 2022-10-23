@@ -3,16 +3,18 @@ package repo
 import (
 	"context"
 	"database/sql"
+	"testing"
+	"time"
+
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/pressly/goose/v3"
 	"github.com/rs/zerolog"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/suite"
+
 	"gophermart-loyalty/internal/config"
 	"gophermart-loyalty/internal/logger"
 	"gophermart-loyalty/internal/models"
-	"testing"
-	"time"
 )
 
 const autotestDSN = "postgres://autotest:autotest@localhost:5432/autotest"

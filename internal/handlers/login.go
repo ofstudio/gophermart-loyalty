@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/go-chi/render"
 	"github.com/golang-jwt/jwt/v4"
-	"net/http"
 )
 
 type LoginRequest struct {
@@ -81,7 +82,7 @@ func (h *Handlers) login(w http.ResponseWriter, r *http.Request) {
 	// Заголовок Authorization должен использоваться только в HTTP-запросах.
 	// Тем не менее автотесты явно требуют наличие заголовка Authorization в ответе.
 	w.Header().Set("Authorization", token)
-	
+
 	// Отправляем токен в ответе
 	_ = render.Render(w, r, &LoginResponse{
 		AccessToken: token,

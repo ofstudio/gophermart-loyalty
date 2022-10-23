@@ -3,7 +3,9 @@ package repo
 import (
 	"database/sql"
 	"fmt"
+
 	_ "github.com/jackc/pgx/v4/stdlib"
+
 	"gophermart-loyalty/internal/config"
 	"gophermart-loyalty/internal/logger"
 	"gophermart-loyalty/internal/repo/migrations"

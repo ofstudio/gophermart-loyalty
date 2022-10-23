@@ -2,20 +2,22 @@ package main
 
 import (
 	"context"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/zerolog"
+
 	"gophermart-loyalty/internal/config"
 	"gophermart-loyalty/internal/handlers"
 	"gophermart-loyalty/internal/integrations"
 	"gophermart-loyalty/internal/logger"
 	"gophermart-loyalty/internal/repo"
 	"gophermart-loyalty/internal/usecases"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 )
 
 var log = logger.NewLogger(zerolog.InfoLevel)

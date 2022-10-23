@@ -2,10 +2,12 @@ package usecases
 
 import (
 	"context"
+	"regexp"
+
 	"golang.org/x/crypto/bcrypt"
+
 	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/models"
-	"regexp"
 )
 
 var loginValidateRe = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._\-@ ]{2,63}$`)

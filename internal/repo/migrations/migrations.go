@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"embed"
 	"fmt"
+
 	"github.com/pressly/goose/v3"
 )
 

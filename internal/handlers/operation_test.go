@@ -1,12 +1,14 @@
 package handlers
 
 import (
-	"github.com/shopspring/decimal"
-	"github.com/stretchr/testify/mock"
-	"gophermart-loyalty/internal/app"
-	"gophermart-loyalty/internal/models"
 	"net/http"
 	"time"
+
+	"github.com/shopspring/decimal"
+	"github.com/stretchr/testify/mock"
+
+	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/models"
 )
 
 func (suite *handlersSuite) TestOrderAccrualCreate() {

@@ -4,18 +4,20 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/suite"
-	"gophermart-loyalty/internal/config"
-	"gophermart-loyalty/internal/logger"
-	"gophermart-loyalty/internal/mocks"
-	"gophermart-loyalty/internal/usecases"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/suite"
+
+	"gophermart-loyalty/internal/config"
+	"gophermart-loyalty/internal/logger"
+	"gophermart-loyalty/internal/mocks"
+	"gophermart-loyalty/internal/usecases"
 )
 
 func TestHandlersSuite(t *testing.T) {

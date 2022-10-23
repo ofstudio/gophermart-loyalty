@@ -2,10 +2,16 @@ package integrations
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+
 	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/config"
 	"gophermart-loyalty/internal/logger"
@@ -13,10 +19,6 @@ import (
 	"gophermart-loyalty/internal/models"
 	"gophermart-loyalty/internal/repo"
 	"gophermart-loyalty/internal/usecases"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 )
 
 const (

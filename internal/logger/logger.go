@@ -2,11 +2,12 @@ package logger
 
 import (
 	"context"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/rs/zerolog"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/rs/zerolog"
 )
 
 type Log struct {

@@ -3,10 +3,11 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/go-chi/render"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/golang-jwt/jwt/v4/request"
-	"net/http"
 )
 
 // authMiddleware - middleware для проверки авторизации.

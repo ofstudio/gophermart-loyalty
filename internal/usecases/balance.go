@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 	"errors"
+
 	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/models"
 )

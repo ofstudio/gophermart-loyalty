@@ -1,11 +1,13 @@
 package usecases
 
 import (
+	"strings"
+
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
+
 	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/models"
-	"strings"
 )
 
 func (suite *useCasesSuite) TestUserCreate() {

@@ -1,16 +1,18 @@
 package handlers
 
 import (
+	"io/ioutil"
+	"net/http"
+	"time"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/shopspring/decimal"
+
 	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/config"
 	"gophermart-loyalty/internal/logger"
 	"gophermart-loyalty/internal/usecases"
-	"io/ioutil"
-	"net/http"
-	"time"
 )
 
 var timeFmt = time.RFC3339

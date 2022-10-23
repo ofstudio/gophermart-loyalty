@@ -1,11 +1,13 @@
 package usecases
 
 import (
+	"time"
+
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/mock"
+
 	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/models"
-	"time"
 )
 
 func (suite *useCasesSuite) TestBalanceHistoryGetByID() {

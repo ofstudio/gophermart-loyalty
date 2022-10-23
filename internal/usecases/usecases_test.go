@@ -2,12 +2,14 @@ package usecases
 
 import (
 	"context"
+	"testing"
+
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
+
 	"gophermart-loyalty/internal/logger"
 	"gophermart-loyalty/internal/mocks"
-	"testing"
 )
 
 func TestUseCasesSuite(t *testing.T) {
