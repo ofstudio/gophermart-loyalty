@@ -13,8 +13,8 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/config"
+	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/logger"
 	"gophermart-loyalty/internal/models"
 	"gophermart-loyalty/internal/usecases"
@@ -83,7 +83,7 @@ func (a *Accrual) poll(ctx context.Context) {
 // updateFurther - запрашивает необработанные операции по начислению баллов и обновляет их статусы
 func (a *Accrual) updateFurther(ctx context.Context) error {
 	op, err := a.useCases.OperationUpdateFurther(ctx, models.OrderAccrual, a.updateCallback)
-	if err == app.ErrNotFound {
+	if err == errs.ErrNotFound {
 		a.log.Debug().Msg("accrual operation: nothing to update")
 		return nil
 	} else if err != nil {
@@ -98,7 +98,7 @@ func (a *Accrual) updateFurther(ctx context.Context) error {
 func (a *Accrual) updateCallback(ctx context.Context, op *models.Operation) error {
 	if op.OrderNumber == nil {
 		a.log.Error().Uint64("operation_id", op.ID).Msg("order number is nil")
-		return app.ErrInternal
+		return errs.ErrInternal
 	}
 
 	// Получаем статус заказа из системы начисления
@@ -106,10 +106,10 @@ func (a *Accrual) updateCallback(ctx context.Context, op *models.Operation) erro
 	if err != nil && err.HTTPStatus == http.StatusTooManyRequests {
 		// Если получили ошибку TooManyRequests, то обновляем тайминги
 		a.adjustPollTiming(err.RetryAfter, err.MaxRPM)
-		return app.ErrIntegrationTooManyRequests
+		return errs.ErrIntegrationTooManyRequests
 	} else if err != nil {
 		a.log.Error().Uint64("operation_id", op.ID).Err(err).Msg("accrual operation request failed")
-		return app.ErrIntegrationRequestFailed
+		return errs.ErrIntegrationRequestFailed
 	}
 
 	a.log.Info().Uint64("operation_id", op.ID).Msg("accrual operation request success")

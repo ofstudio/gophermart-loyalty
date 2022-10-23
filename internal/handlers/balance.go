@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/shopspring/decimal"
 
-	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/models"
 )
 
@@ -49,7 +49,7 @@ func (h *Handlers) balanceGet(w http.ResponseWriter, r *http.Request) {
 
 	// Запрашиваем пользователя
 	user, err := h.useCases.UserGetByID(r.Context(), userID)
-	if errors.Is(err, app.ErrNotFound) {
+	if errors.Is(err, errs.ErrNotFound) {
 		// Если пользователь не найден — возвращаем 500
 		_ = render.Render(w, r, ErrInternal)
 		return

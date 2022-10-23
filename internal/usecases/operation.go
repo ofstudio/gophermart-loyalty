@@ -8,7 +8,7 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/models"
 	"gophermart-loyalty/internal/repo"
 	"gophermart-loyalty/pkg/luhn"
@@ -57,7 +57,7 @@ func (u *UseCases) PromoAccrualPrepare(ctx context.Context, userID uint64, promo
 	now := time.Now()
 	if now.Before(promo.NotBefore) || now.After(promo.NotAfter) {
 		u.log.WithReqID(ctx).Error().Err(err).Msg("promo is not active")
-		return nil, app.ErrNotFound
+		return nil, errs.ErrNotFound
 	}
 
 	return &models.Operation{
@@ -83,7 +83,7 @@ func (u *UseCases) OperationCreate(ctx context.Context, op *models.Operation) er
 // OperationGetByType - список операций пользователя по заданному типу
 func (u *UseCases) OperationGetByType(ctx context.Context, userID uint64, t models.OperationType) ([]*models.Operation, error) {
 	ops, err := u.repo.OperationGetByType(ctx, userID, t)
-	if errors.Is(err, app.ErrNotFound) {
+	if errors.Is(err, errs.ErrNotFound) {
 		return []*models.Operation{}, nil
 	} else if err != nil {
 		u.log.WithReqID(ctx).Error().Err(err).Msg("failed to get operations")
@@ -101,10 +101,10 @@ func (u *UseCases) OperationUpdateFurther(ctx context.Context, opType models.Ope
 func (u *UseCases) orderNumberValidate(orderNumber string) error {
 	const orderNumberMaxLen = 512
 	if len(orderNumber) == 0 {
-		return app.ErrBadRequest
+		return errs.ErrBadRequest
 	}
 	if len(orderNumber) > orderNumberMaxLen || !luhn.Check(orderNumber) {
-		return app.ErrOperationOrderNumberInvalid
+		return errs.ErrOperationOrderNumberInvalid
 	}
 	return nil
 }

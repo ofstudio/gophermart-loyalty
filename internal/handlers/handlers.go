@@ -9,8 +9,8 @@ import (
 	"github.com/go-chi/render"
 	"github.com/shopspring/decimal"
 
-	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/config"
+	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/logger"
 	"gophermart-loyalty/internal/usecases"
 )
@@ -59,7 +59,7 @@ func (h *Handlers) Routes() chi.Router {
 func decodePlainText(r *http.Request) (string, error) {
 	contentType := render.GetRequestContentType(r)
 	if contentType != render.ContentTypePlainText {
-		return "", app.ErrBadRequest
+		return "", errs.ErrBadRequest
 	}
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {

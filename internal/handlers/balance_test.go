@@ -7,7 +7,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/mock"
 
-	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/models"
 )
 
@@ -32,7 +32,7 @@ func (suite *handlersSuite) TestBalanceGet() {
 
 	suite.Run("non existing user", func() {
 		suite.repo.On("UserGetByID", mock.Anything, uint64(100)).
-			Return(nil, app.ErrNotFound).Once()
+			Return(nil, errs.ErrNotFound).Once()
 
 		token := suite.validJWTToken(100)
 		res := suite.httpJSONRequest(http.MethodGet, "/balance", "", token)
@@ -106,7 +106,7 @@ func (suite *handlersSuite) TestBalanceHistoryGet() {
 
 	suite.Run("empty", func() {
 		suite.repo.On("BalanceHistoryGetByID", mock.Anything, uint64(1)).
-			Return(nil, app.ErrNotFound).Once()
+			Return(nil, errs.ErrNotFound).Once()
 
 		token := suite.validJWTToken(1)
 		res := suite.httpJSONRequest(http.MethodGet, "/balance/history", "", token)
@@ -122,7 +122,7 @@ func (suite *handlersSuite) TestBalanceHistoryGet() {
 
 	suite.Run("internal error", func() {
 		suite.repo.On("BalanceHistoryGetByID", mock.Anything, uint64(1)).
-			Return(nil, app.ErrInternal).Once()
+			Return(nil, errs.ErrInternal).Once()
 
 		token := suite.validJWTToken(1)
 		res := suite.httpJSONRequest(http.MethodGet, "/balance/history", "", token)

@@ -6,7 +6,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/mock"
 
-	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/models"
 )
 
@@ -33,7 +33,7 @@ func (suite *useCasesSuite) TestBalanceHistoryGetByID() {
 
 	suite.Run("no operations", func() {
 		suite.repo.On("BalanceHistoryGetByID", mock.Anything, uint64(1)).
-			Return(nil, app.ErrNotFound).Once()
+			Return(nil, errs.ErrNotFound).Once()
 		history, err := suite.useCases.BalanceHistoryGetByID(suite.ctx(), uint64(1))
 		suite.NoError(err)
 		suite.Nil(history)
@@ -41,9 +41,9 @@ func (suite *useCasesSuite) TestBalanceHistoryGetByID() {
 
 	suite.Run("internal error", func() {
 		suite.repo.On("BalanceHistoryGetByID", mock.Anything, uint64(1)).
-			Return(nil, app.ErrInternal).Once()
+			Return(nil, errs.ErrInternal).Once()
 		history, err := suite.useCases.BalanceHistoryGetByID(suite.ctx(), uint64(1))
-		suite.ErrorIs(err, app.ErrInternal)
+		suite.ErrorIs(err, errs.ErrInternal)
 		suite.Nil(history)
 	})
 

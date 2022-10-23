@@ -7,7 +7,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/mock"
 
-	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/models"
 	"gophermart-loyalty/internal/repo"
 )
@@ -25,7 +25,7 @@ func (suite *useCasesSuite) TestOrderAccrualPrepare() {
 
 	suite.Run("invalid order number", func() {
 		op, err := suite.useCases.OrderAccrualPrepare(suite.ctx(), 1, "111")
-		suite.ErrorIs(err, app.ErrOperationOrderNumberInvalid)
+		suite.ErrorIs(err, errs.ErrOperationOrderNumberInvalid)
 		suite.Nil(op)
 	})
 }
@@ -44,7 +44,7 @@ func (suite *useCasesSuite) TestOrderWithdrawalPrepare() {
 
 	suite.Run("invalid order number", func() {
 		op, err := suite.useCases.OrderWithdrawalPrepare(suite.ctx(), 1, "111", decimal.NewFromFloat(100))
-		suite.ErrorIs(err, app.ErrOperationOrderNumberInvalid)
+		suite.ErrorIs(err, errs.ErrOperationOrderNumberInvalid)
 		suite.Nil(op)
 	})
 }
@@ -71,9 +71,9 @@ func (suite *useCasesSuite) TestPromoAccrualPrepare() {
 
 	suite.Run("promo not found", func() {
 		suite.repo.On("PromoGetByCode", mock.Anything, "PROMO1").
-			Return(nil, app.ErrNotFound).Once()
+			Return(nil, errs.ErrNotFound).Once()
 		op, err := suite.useCases.PromoAccrualPrepare(suite.ctx(), 1, "PROMO1")
-		suite.ErrorIs(err, app.ErrNotFound)
+		suite.ErrorIs(err, errs.ErrNotFound)
 		suite.Nil(op)
 	})
 
@@ -87,7 +87,7 @@ func (suite *useCasesSuite) TestPromoAccrualPrepare() {
 		}, nil).Once()
 
 		op, err := suite.useCases.PromoAccrualPrepare(suite.ctx(), 1, "PROMO1")
-		suite.ErrorIs(err, app.ErrNotFound)
+		suite.ErrorIs(err, errs.ErrNotFound)
 		suite.Nil(op)
 	})
 
@@ -101,7 +101,7 @@ func (suite *useCasesSuite) TestPromoAccrualPrepare() {
 		}, nil).Once()
 
 		op, err := suite.useCases.PromoAccrualPrepare(suite.ctx(), 1, "PROMO1")
-		suite.ErrorIs(err, app.ErrNotFound)
+		suite.ErrorIs(err, errs.ErrNotFound)
 		suite.Nil(op)
 	})
 }
@@ -135,10 +135,10 @@ func (suite *useCasesSuite) TestOperationCreate() {
 			PromoID:     nil,
 		}
 		suite.repo.On("OperationCreate", mock.Anything, op).
-			Return(app.ErrUserBalanceNegative).Once()
+			Return(errs.ErrUserBalanceNegative).Once()
 
 		err := suite.useCases.OperationCreate(suite.ctx(), op)
-		suite.ErrorIs(err, app.ErrUserBalanceNegative)
+		suite.ErrorIs(err, errs.ErrUserBalanceNegative)
 	})
 }
 
@@ -175,7 +175,7 @@ func (suite *useCasesSuite) TestOperationGetByType() {
 
 	suite.Run("not found", func() {
 		suite.repo.On("OperationGetByType", mock.Anything, uint64(1), models.OrderAccrual).
-			Return(nil, app.ErrNotFound).Once()
+			Return(nil, errs.ErrNotFound).Once()
 
 		ops, err := suite.useCases.OperationGetByType(suite.ctx(), 1, models.OrderAccrual)
 		suite.Nil(err)
@@ -216,9 +216,9 @@ func (suite *useCasesSuite) TestOperationUpdateFurther() {
 
 	suite.Run("internal error", func() {
 		suite.repo.On("OperationUpdateFurther", mock.Anything, models.OrderAccrual, mock.AnythingOfType("repo.UpdateFunc")).
-			Return(nil, app.ErrInternal).Once()
+			Return(nil, errs.ErrInternal).Once()
 
 		_, err := suite.useCases.OperationUpdateFurther(suite.ctx(), models.OrderAccrual, nil)
-		suite.ErrorIs(err, app.ErrInternal)
+		suite.ErrorIs(err, errs.ErrInternal)
 	})
 }

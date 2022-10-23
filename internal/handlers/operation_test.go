@@ -7,7 +7,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/mock"
 
-	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/models"
 )
 
@@ -32,7 +32,7 @@ func (suite *handlersSuite) TestOrderAccrualCreate() {
 
 	suite.Run("duplicate order id", func() {
 		suite.repo.On("OperationCreate", mock.Anything, mock.Anything).
-			Return(app.ErrOperationOrderUsed).Once()
+			Return(errs.ErrOperationOrderUsed).Once()
 		token := suite.validJWTToken(1)
 		res := suite.httpPlainTextRequest("POST", "/orders", "12345678903", token)
 		defer res.Body.Close()
@@ -52,7 +52,7 @@ func (suite *handlersSuite) TestOrderAccrualCreate() {
 
 	suite.Run("order number belongs to another user", func() {
 		suite.repo.On("OperationCreate", mock.Anything, mock.Anything).
-			Return(app.ErrOperationOrderNotBelongs).Once()
+			Return(errs.ErrOperationOrderNotBelongs).Once()
 		token := suite.validJWTToken(2)
 		res := suite.httpPlainTextRequest("POST", "/orders", "12345678903", token)
 		defer res.Body.Close()
@@ -63,7 +63,7 @@ func (suite *handlersSuite) TestOrderAccrualCreate() {
 
 	suite.Run("internal error", func() {
 		suite.repo.On("OperationCreate", mock.Anything, mock.Anything).
-			Return(app.ErrInternal).Once()
+			Return(errs.ErrInternal).Once()
 		token := suite.validJWTToken(1)
 		res := suite.httpPlainTextRequest("POST", "/orders", "12345678903", token)
 		defer res.Body.Close()
@@ -109,7 +109,7 @@ func (suite *handlersSuite) TestOrderWithdrawalCreate() {
 	suite.Run("insufficient funds", func() {
 		reqBody := `{"order":"12345678903","sum":100}`
 		suite.repo.On("OperationCreate", mock.Anything, mock.Anything).
-			Return(app.ErrUserBalanceNegative).Once()
+			Return(errs.ErrUserBalanceNegative).Once()
 		token := suite.validJWTToken(1)
 		res := suite.httpJSONRequest("POST", "/balance/withdraw", reqBody, token)
 		defer res.Body.Close()
@@ -121,7 +121,7 @@ func (suite *handlersSuite) TestOrderWithdrawalCreate() {
 	suite.Run("order number belongs to another user", func() {
 		reqBody := `{"order":"12345678903","sum":100}`
 		suite.repo.On("OperationCreate", mock.Anything, mock.Anything).
-			Return(app.ErrOperationOrderNotBelongs).Once()
+			Return(errs.ErrOperationOrderNotBelongs).Once()
 		token := suite.validJWTToken(2)
 		res := suite.httpJSONRequest("POST", "/balance/withdraw", reqBody, token)
 		defer res.Body.Close()
@@ -133,7 +133,7 @@ func (suite *handlersSuite) TestOrderWithdrawalCreate() {
 	suite.Run("internal error", func() {
 		reqBody := `{"order":"12345678903","sum":100}`
 		suite.repo.On("OperationCreate", mock.Anything, mock.Anything).
-			Return(app.ErrInternal).Once()
+			Return(errs.ErrInternal).Once()
 		token := suite.validJWTToken(1)
 		res := suite.httpJSONRequest("POST", "/balance/withdraw", reqBody, token)
 		defer res.Body.Close()
@@ -168,7 +168,7 @@ func (suite *handlersSuite) TestPromoAccrualCreate() {
 
 	suite.Run("promo not found", func() {
 		suite.repo.On("PromoGetByCode", mock.Anything, "WELCOME2022").
-			Return(nil, app.ErrNotFound).Once()
+			Return(nil, errs.ErrNotFound).Once()
 
 		token := suite.validJWTToken(1)
 		res := suite.httpPlainTextRequest("POST", "/promos", "WELCOME2022", token)
@@ -218,7 +218,7 @@ func (suite *handlersSuite) TestPromoAccrualCreate() {
 
 	suite.Run("internal error", func() {
 		suite.repo.On("PromoGetByCode", mock.Anything, "WELCOME2022").
-			Return(nil, app.ErrInternal).Once()
+			Return(nil, errs.ErrInternal).Once()
 
 		token := suite.validJWTToken(1)
 		res := suite.httpPlainTextRequest("POST", "/promos", "WELCOME2022", token)
@@ -263,7 +263,7 @@ func (suite *handlersSuite) TestOrderAccrualList() {
 
 	suite.Run("no content", func() {
 		suite.repo.On("OperationGetByType", mock.Anything, uint64(1), models.OrderAccrual).
-			Return(nil, app.ErrNotFound).Once()
+			Return(nil, errs.ErrNotFound).Once()
 
 		token := suite.validJWTToken(1)
 		res := suite.httpPlainTextRequest("GET", "/orders", "", token)
@@ -273,7 +273,7 @@ func (suite *handlersSuite) TestOrderAccrualList() {
 
 	suite.Run("internal error", func() {
 		suite.repo.On("OperationGetByType", mock.Anything, uint64(1), models.OrderAccrual).
-			Return(nil, app.ErrInternal).Once()
+			Return(nil, errs.ErrInternal).Once()
 
 		token := suite.validJWTToken(1)
 		res := suite.httpPlainTextRequest("GET", "/orders", "", token)
@@ -319,7 +319,7 @@ func (suite *handlersSuite) TestOrderWithdrawalList() {
 
 	suite.Run("no content", func() {
 		suite.repo.On("OperationGetByType", mock.Anything, uint64(1), models.OrderWithdrawal).
-			Return(nil, app.ErrNotFound).Once()
+			Return(nil, errs.ErrNotFound).Once()
 
 		token := suite.validJWTToken(1)
 		res := suite.httpPlainTextRequest("GET", "/withdrawals", "", token)
@@ -329,7 +329,7 @@ func (suite *handlersSuite) TestOrderWithdrawalList() {
 
 	suite.Run("internal error", func() {
 		suite.repo.On("OperationGetByType", mock.Anything, uint64(1), models.OrderWithdrawal).
-			Return(nil, app.ErrInternal).Once()
+			Return(nil, errs.ErrInternal).Once()
 
 		token := suite.validJWTToken(1)
 		res := suite.httpPlainTextRequest("GET", "/withdrawals", "", token)

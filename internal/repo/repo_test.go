@@ -17,6 +17,7 @@ import (
 	"gophermart-loyalty/internal/models"
 )
 
+// Если тестовая БД не будет запущена, то тесты будут пропущены
 const autotestDSN = "postgres://autotest:autotest@localhost:5432/autotest"
 
 func TestPGXRepoSuite(t *testing.T) {

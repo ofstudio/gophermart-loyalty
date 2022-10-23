@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/models"
 )
 
@@ -38,8 +38,8 @@ func (r *PGXRepo) OperationCreate(ctx context.Context, op *models.Operation) err
 
 	// Блокируем запись пользователя для обновления
 	if err = r.userLockTx(ctx, tx, op.UserID); err != nil {
-		if errors.Is(err, app.ErrNotFound) {
-			err = app.ErrOperationUserNotExists
+		if errors.Is(err, errs.ErrNotFound) {
+			err = errs.ErrOperationUserNotExists
 		}
 		return err
 	}

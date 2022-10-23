@@ -9,7 +9,7 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/models"
 )
 
@@ -48,18 +48,18 @@ func (suite *pgxRepoSuite) TestOperationCreate_constraints() {
 
 	suite.Run("must_refs_user constraint", func() {
 		err := suite.repo.OperationCreate(suite.ctx(), testOA(1000, "10", 100, models.StatusNew))
-		suite.ErrorIs(err, app.ErrOperationUserNotExists)
+		suite.ErrorIs(err, errs.ErrOperationUserNotExists)
 	})
 
 	suite.Run("amount_valid_sign constraint", func() {
 		err := suite.repo.OperationCreate(suite.ctx(), testOA(1, "10", -100, models.StatusProcessed))
-		suite.ErrorIs(err, app.ErrOperationAmountInvalid)
+		suite.ErrorIs(err, errs.ErrOperationAmountInvalid)
 
 		err = suite.repo.OperationCreate(suite.ctx(), testOW(1, "20", 100, models.StatusProcessed))
-		suite.ErrorIs(err, app.ErrOperationAmountInvalid)
+		suite.ErrorIs(err, errs.ErrOperationAmountInvalid)
 
 		err = suite.repo.OperationCreate(suite.ctx(), testPA(1, 1, -100, models.StatusProcessed))
-		suite.ErrorIs(err, app.ErrOperationAmountInvalid)
+		suite.ErrorIs(err, errs.ErrOperationAmountInvalid)
 	})
 
 	suite.Run("order_belongs_to_user constraint", func() {
@@ -67,14 +67,14 @@ func (suite *pgxRepoSuite) TestOperationCreate_constraints() {
 		suite.NoError(err)
 
 		err = suite.repo.OperationCreate(suite.ctx(), testOA(2, "10", 100, models.StatusNew))
-		suite.ErrorIs(err, app.ErrOperationOrderNotBelongs)
+		suite.ErrorIs(err, errs.ErrOperationOrderNotBelongs)
 	})
 
 	suite.Run("order_unique_for_op_type constraint", func() {
 		err := suite.repo.OperationCreate(suite.ctx(), testOA(1, "100", 100, models.StatusNew))
 		suite.NoError(err)
 		err = suite.repo.OperationCreate(suite.ctx(), testOA(1, "100", 100, models.StatusNew))
-		suite.ErrorIs(err, app.ErrOperationOrderUsed)
+		suite.ErrorIs(err, errs.ErrOperationOrderUsed)
 	})
 
 	suite.Run("balance_not_negative constraint", func() {
@@ -83,19 +83,19 @@ func (suite *pgxRepoSuite) TestOperationCreate_constraints() {
 		err = suite.repo.OperationCreate(suite.ctx(), testOW(3, "60", -100, models.StatusNew))
 		suite.NoError(err)
 		err = suite.repo.OperationCreate(suite.ctx(), testOW(3, "70", -150, models.StatusProcessing))
-		suite.ErrorIs(err, app.ErrUserBalanceNegative)
+		suite.ErrorIs(err, errs.ErrUserBalanceNegative)
 	})
 
 	suite.Run("must_refs_promo constraint", func() {
 		err := suite.repo.OperationCreate(suite.ctx(), testPA(1, 100500, 100, models.StatusProcessed))
-		suite.ErrorIs(err, app.ErrNotFound)
+		suite.ErrorIs(err, errs.ErrNotFound)
 	})
 
 	suite.Run("promo_unique_for_user constraint", func() {
 		err := suite.repo.OperationCreate(suite.ctx(), testPA(2, 1, 100, models.StatusProcessed))
 		suite.NoError(err)
 		err = suite.repo.OperationCreate(suite.ctx(), testPA(2, 1, 100, models.StatusProcessed))
-		suite.ErrorIs(err, app.ErrOperationPromoUsed)
+		suite.ErrorIs(err, errs.ErrOperationPromoUsed)
 	})
 
 	suite.Run("operation_valid_attrs constraint", func() {
@@ -112,15 +112,15 @@ func (suite *pgxRepoSuite) TestOperationCreate_constraints() {
 		}
 
 		err := suite.repo.OperationCreate(suite.ctx(), op)
-		suite.ErrorIs(err, app.ErrOperationAttrsInvalid)
+		suite.ErrorIs(err, errs.ErrOperationAttrsInvalid)
 
 		op.PromoID = &promoID
 		err = suite.repo.OperationCreate(suite.ctx(), op)
-		suite.ErrorIs(err, app.ErrOperationAttrsInvalid)
+		suite.ErrorIs(err, errs.ErrOperationAttrsInvalid)
 
 		op.OrderNumber = &orderNumber
 		err = suite.repo.OperationCreate(suite.ctx(), op)
-		suite.ErrorIs(err, app.ErrOperationAttrsInvalid)
+		suite.ErrorIs(err, errs.ErrOperationAttrsInvalid)
 
 		op.PromoID = nil
 		err = suite.repo.OperationCreate(suite.ctx(), op)
@@ -229,7 +229,7 @@ func (suite *pgxRepoSuite) updateWorker(ctx context.Context, wg *sync.WaitGroup,
 			return
 		default:
 			_, err := suite.repo.OperationUpdateFurther(ctx, models.OrderAccrual, suite.updateFunc)
-			if errors.Is(err, app.ErrNotFound) {
+			if errors.Is(err, errs.ErrNotFound) {
 				return
 			}
 			suite.NoError(err)

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/logger"
 	"gophermart-loyalty/internal/models"
 	"gophermart-loyalty/internal/usecases"
@@ -70,7 +70,7 @@ func (s *ShopStub) updateFurther(ctx context.Context) {
 	op, err := s.useCases.OperationUpdateFurther(ctx, models.OrderWithdrawal, func(ctx context.Context, op *models.Operation) error {
 		if op.OrderNumber == nil {
 			s.log.Error().Uint64("operation_id", op.ID).Msg("order number is nil")
-			return app.ErrInternal
+			return errs.ErrInternal
 		}
 		if time.Since(op.CreatedAt) > time.Minute {
 			if strings.HasPrefix(*op.OrderNumber, "000") {
@@ -79,12 +79,12 @@ func (s *ShopStub) updateFurther(ctx context.Context) {
 				op.Status = models.StatusProcessed
 			}
 		} else {
-			return app.ErrNotFound
+			return errs.ErrNotFound
 		}
 		return nil
 	})
 
-	if err == app.ErrNotFound {
+	if err == errs.ErrNotFound {
 		s.log.Debug().Msg("withdrawal operation: nothing to update")
 		return
 	} else if err != nil {

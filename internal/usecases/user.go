@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/models"
 )
 
@@ -17,19 +17,19 @@ var passValidateRe = regexp.MustCompile(`^.{6,512}$`)
 func (u *UseCases) UserCreate(ctx context.Context, login, password string) (*models.User, error) {
 	// валидируем логин
 	if !loginValidateRe.MatchString(login) {
-		return nil, app.ErrUserLoginInvalid
+		return nil, errs.ErrUserLoginInvalid
 	}
 
 	// валидируем пароль
 	if !passValidateRe.MatchString(password) {
-		return nil, app.ErrUserPassInvalid
+		return nil, errs.ErrUserPassInvalid
 	}
 
 	// Создаем хэш пароля
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		u.log.WithReqID(ctx).Error().Err(err).Msg("failed to hash password")
-		return nil, app.ErrInternal
+		return nil, errs.ErrInternal
 	}
 
 	// Создаем пользователя
@@ -56,12 +56,12 @@ func (u *UseCases) UserCheckLoginPass(ctx context.Context, login, password strin
 	user, err := u.repo.UserGetByLogin(ctx, login)
 	if err != nil {
 		u.log.WithReqID(ctx).Error().Err(err).Msg("failed to find user")
-		return nil, app.ErrUserLoginPassMismatch
+		return nil, errs.ErrUserLoginPassMismatch
 	}
 	// Сравниваем хэши паролей
 	err = bcrypt.CompareHashAndPassword([]byte(user.PassHash), []byte(password))
 	if err != nil {
-		return nil, app.ErrUserLoginPassMismatch
+		return nil, errs.ErrUserLoginPassMismatch
 	}
 	u.log.Debug().Msg("user found, password matched")
 	return user, nil

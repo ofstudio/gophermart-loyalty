@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
 
-	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/models"
 )
 
@@ -34,45 +34,45 @@ func (suite *useCasesSuite) TestUserCreate() {
 
 	suite.Run("user already exists", func() {
 		suite.repo.On("UserCreate", mock.Anything, mock.Anything).
-			Return(app.ErrUserAlreadyExists).Once()
+			Return(errs.ErrUserAlreadyExists).Once()
 		user, err := suite.useCases.UserCreate(suite.ctx(), "oleg", password)
-		suite.ErrorIs(err, app.ErrUserAlreadyExists)
+		suite.ErrorIs(err, errs.ErrUserAlreadyExists)
 		suite.Nil(user)
 	})
 
 	suite.Run("password too short", func() {
 		user, err := suite.useCases.UserCreate(suite.ctx(), "oleg", "12345")
-		suite.ErrorIs(err, app.ErrUserPassInvalid)
+		suite.ErrorIs(err, errs.ErrUserPassInvalid)
 		suite.Nil(user)
 	})
 
 	suite.Run("password too long", func() {
 		user, err := suite.useCases.UserCreate(suite.ctx(), "oleg", strings.Repeat("1", 513))
-		suite.ErrorIs(err, app.ErrUserPassInvalid)
+		suite.ErrorIs(err, errs.ErrUserPassInvalid)
 		suite.Nil(user)
 	})
 
 	suite.Run("login too short", func() {
 		user, err := suite.useCases.UserCreate(suite.ctx(), "of", password)
-		suite.ErrorIs(err, app.ErrUserLoginInvalid)
+		suite.ErrorIs(err, errs.ErrUserLoginInvalid)
 		suite.Nil(user)
 	})
 
 	suite.Run("login too long", func() {
 		user, err := suite.useCases.UserCreate(suite.ctx(), strings.Repeat("o", 65), password)
-		suite.ErrorIs(err, app.ErrUserLoginInvalid)
+		suite.ErrorIs(err, errs.ErrUserLoginInvalid)
 		suite.Nil(user)
 	})
 
 	suite.Run("login contains invalid characters", func() {
 		user, err := suite.useCases.UserCreate(suite.ctx(), "o!leg", password)
-		suite.ErrorIs(err, app.ErrUserLoginInvalid)
+		suite.ErrorIs(err, errs.ErrUserLoginInvalid)
 		suite.Nil(user)
 	})
 
 	suite.Run("login starts with invalid characters", func() {
 		user, err := suite.useCases.UserCreate(suite.ctx(), "-oleg", password)
-		suite.ErrorIs(err, app.ErrUserLoginInvalid)
+		suite.ErrorIs(err, errs.ErrUserLoginInvalid)
 		suite.Nil(user)
 	})
 }
@@ -95,9 +95,9 @@ func (suite *useCasesSuite) TestUserCheckLoginPass() {
 
 	suite.Run("user not found", func() {
 		suite.repo.On("UserGetByLogin", mock.Anything, "oleg").
-			Return(nil, app.ErrNotFound).Once()
+			Return(nil, errs.ErrNotFound).Once()
 		user, err := suite.useCases.UserCheckLoginPass(suite.ctx(), "oleg", password)
-		suite.ErrorIs(err, app.ErrUserLoginPassMismatch)
+		suite.ErrorIs(err, errs.ErrUserLoginPassMismatch)
 		suite.Nil(user)
 	})
 
@@ -109,7 +109,7 @@ func (suite *useCasesSuite) TestUserCheckLoginPass() {
 				PassHash: string(passhash),
 			}, nil).Once()
 		user, err := suite.useCases.UserCheckLoginPass(suite.ctx(), "oleg", "wrong password")
-		suite.ErrorIs(err, app.ErrUserLoginPassMismatch)
+		suite.ErrorIs(err, errs.ErrUserLoginPassMismatch)
 		suite.Nil(user)
 	})
 }
@@ -128,9 +128,9 @@ func (suite *useCasesSuite) TestUserGetByID() {
 
 	suite.Run("user not found", func() {
 		suite.repo.On("UserGetByID", mock.Anything, mock.Anything).
-			Return(nil, app.ErrNotFound).Once()
+			Return(nil, errs.ErrNotFound).Once()
 		user, err := suite.useCases.UserGetByID(suite.ctx(), 1)
-		suite.ErrorIs(err, app.ErrNotFound)
+		suite.ErrorIs(err, errs.ErrNotFound)
 		suite.Nil(user)
 	})
 }

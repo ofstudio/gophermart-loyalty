@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 
-	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/errs"
 )
 
 func (suite *handlersSuite) TestRegister() {
@@ -34,7 +34,7 @@ func (suite *handlersSuite) TestRegister() {
 
 	suite.Run("user already exists", func() {
 		suite.repo.On("UserCreate", mock.Anything, mock.Anything).
-			Return(app.ErrUserAlreadyExists).Once()
+			Return(errs.ErrUserAlreadyExists).Once()
 
 		res := suite.httpJSONRequest("POST", "/register", reqBody, "")
 		defer res.Body.Close()
@@ -45,7 +45,7 @@ func (suite *handlersSuite) TestRegister() {
 
 	suite.Run("internal error", func() {
 		suite.repo.On("UserCreate", mock.Anything, mock.Anything).
-			Return(app.ErrInternal).Once()
+			Return(errs.ErrInternal).Once()
 
 		res := suite.httpJSONRequest("POST", "/register", reqBody, "")
 		defer res.Body.Close()

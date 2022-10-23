@@ -1,5 +1,5 @@
 // Package errs - бизнес-ошибки.
-package app
+package errs
 
 import (
 	"errors"

@@ -8,7 +8,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/shopspring/decimal"
 
-	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/models"
 )
 
@@ -50,7 +50,7 @@ func (h *Handlers) orderAccrualCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	// Сохраняем операцию
 	err = h.useCases.OperationCreate(r.Context(), op)
-	if errors.Is(err, app.ErrOperationOrderUsed) {
+	if errors.Is(err, errs.ErrOperationOrderUsed) {
 		// если номер заказа уже использовался этим пользователем для начисления бонусов,
 		// то возвращаем 200 ОК
 		w.WriteHeader(http.StatusOK)

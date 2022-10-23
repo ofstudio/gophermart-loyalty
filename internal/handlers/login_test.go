@@ -6,7 +6,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/mock"
 
-	"gophermart-loyalty/internal/app"
+	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/models"
 )
 
@@ -40,7 +40,7 @@ func (suite *handlersSuite) TestLogin() {
 
 	suite.Run("invalid login or password", func() {
 		suite.repo.On("UserGetByLogin", mock.Anything, "test").
-			Return(nil, app.ErrNotFound).Once()
+			Return(nil, errs.ErrNotFound).Once()
 
 		res := suite.httpJSONRequest(http.MethodPost, "/login", reqBody, "")
 		defer res.Body.Close()

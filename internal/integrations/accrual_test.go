@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
-	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/config"
+	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/logger"
 	"gophermart-loyalty/internal/mocks"
 	"gophermart-loyalty/internal/models"
@@ -64,14 +64,14 @@ func (suite *accrualSuite) TestFailedRequest() {
 	suite.testHandler = suite.handlers["failed"]
 	suite.mockCalls["success"]().Once()
 	err := suite.accrual.updateFurther(suite.ctx())
-	suite.ErrorIs(err, app.ErrIntegrationRequestFailed)
+	suite.ErrorIs(err, errs.ErrIntegrationRequestFailed)
 }
 
 func (suite *accrualSuite) TestTimeout() {
 	suite.testHandler = suite.handlers["timeout"]
 	suite.mockCalls["success"]().Once()
 	err := suite.accrual.updateFurther(suite.ctx())
-	suite.ErrorIs(err, app.ErrIntegrationRequestFailed)
+	suite.ErrorIs(err, errs.ErrIntegrationRequestFailed)
 }
 
 func (suite *accrualSuite) TestTooManyRequests() {
@@ -94,7 +94,7 @@ func (suite *accrualSuite) TestNoOperationsToUpdate() {
 func (suite *accrualSuite) TestUpdateFailed() {
 	suite.mockCalls["failed"]().Once()
 	err := suite.accrual.updateFurther(suite.ctx())
-	suite.ErrorIs(err, app.ErrInternal)
+	suite.ErrorIs(err, errs.ErrInternal)
 }
 
 type accrualSuite struct {
@@ -157,12 +157,12 @@ func (suite *accrualSuite) SetupSuite() {
 		"no_operations_to_update": func() *mock.Call {
 			return suite.repo.
 				On("OperationUpdateFurther", mock.Anything, models.OrderAccrual, mock.Anything).
-				Return(nil, app.ErrNotFound)
+				Return(nil, errs.ErrNotFound)
 		},
 		"failed": func() *mock.Call {
 			return suite.repo.
 				On("OperationUpdateFurther", mock.Anything, models.OrderAccrual, mock.Anything).
-				Return(nil, app.ErrInternal)
+				Return(nil, errs.ErrInternal)
 		},
 	}
 }
