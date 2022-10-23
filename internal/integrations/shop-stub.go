@@ -52,11 +52,11 @@ func (s *ShopStub) Status() int {
 
 // poll - цикл обновления необработанных заказов по списанию баллов
 func (s *ShopStub) poll(ctx context.Context) {
-	s.log.Info().Msg("shop-stub poller started")
+	s.log.Info().Msg("shop integration started")
 	for {
 		select {
 		case <-ctx.Done():
-			s.log.Info().Msg("shop-stub poller stopped")
+			s.log.Info().Msg("shop integration stopped")
 			s.status = ShopStubStopped
 			return
 		case <-time.After(s.pollInterval):

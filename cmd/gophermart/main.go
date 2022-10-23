@@ -2,32 +2,19 @@ package main
 
 import (
 	"context"
-	"net/http"
-	"os"
-	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/zerolog"
 
+	"gophermart-loyalty/internal/app"
 	"gophermart-loyalty/internal/config"
-	"gophermart-loyalty/internal/handlers"
-	"gophermart-loyalty/internal/integrations"
 	"gophermart-loyalty/internal/logger"
-	"gophermart-loyalty/internal/repo"
-	"gophermart-loyalty/internal/usecases"
+	"gophermart-loyalty/pkg/shutdown"
 )
 
-var log = logger.NewLogger(zerolog.InfoLevel)
-
 func main() {
-	// Контекст для остановки интеграций
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	// Сигнал для завершения приложения
-	exit := make(chan struct{})
+	// Логгер
+	log := logger.NewLogger(zerolog.InfoLevel)
 
 	// Читаем конфигурацию
 	cfg, err := config.Compose(config.Default, config.FromEnv, config.FromCLI)
@@ -35,55 +22,16 @@ func main() {
 		log.Fatal().Err(err).Msg("error while loading config")
 	}
 
-	// Создаём репозиторий, юзкейсы и интеграции
-	repository, err := repo.NewPGXRepo(&cfg.DB, log)
+	// Контекст для остановки приложения
+	ctx, cancel := shutdown.ContextWithShutdown(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
+	// Запускаем приложение
+	application := app.NewApp(cfg, log)
+	err = application.Start(ctx)
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to create repository")
-	}
-	useCases := usecases.NewUseCases(repository, log)
-	integrationAccrual := integrations.NewAccrual(&cfg.IntegrationAccrual, useCases, log)
-	integrationShop := integrations.NewShopStub(useCases, log)
-
-	// Создаём сервер
-	h := handlers.NewHandlers(&cfg.Auth, useCases, log)
-	r := chi.NewRouter()
-	r.Use(middleware.RealIP)
-	r.Use(middleware.RequestID)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Mount("/api/user", h.Routes())
-	server := &http.Server{
-		Addr:    cfg.RunAddress,
-		Handler: r,
+		log.Fatal().Err(err).Msg("error while starting application")
 	}
 
-	// Горутина для graceful-остановки приложения
-	go func() {
-		stop := make(chan os.Signal, 1)
-		signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
-
-		// Ждём сигнала
-		log.Warn().Stringer("signal", <-stop).Msg("stopping application")
-		// Закрываем контекст и останавливаем интеграции
-		cancel()
-		// Останавливаем сервер
-		ctxSrv, cancelSrv := context.WithTimeout(context.Background(), 1*time.Second)
-		defer cancelSrv()
-		_ = server.Shutdown(ctxSrv)
-		log.Info().Msg("server stopped")
-		// Отправляем сигнал о завершении приложения
-		close(exit)
-	}()
-
-	// Запускаем интеграции и сервер
-	integrationAccrual.Start(ctx)
-	integrationShop.Start(ctx)
-	err = server.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
-		log.Fatal().Err(err).Msg("error while starting server")
-	}
-
-	// Ждём завершения приложения
-	<-exit
 	log.Info().Msg("exiting")
 }

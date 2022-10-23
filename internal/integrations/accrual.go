@@ -63,11 +63,11 @@ func (a *Accrual) Status() int {
 // Тайминг между обновлениями задается в конфигурации и может
 // адаптироваться к сервису начисления в случае ошибки HTTP 429 Too Many Requests
 func (a *Accrual) poll(ctx context.Context) {
-	a.log.Info().Msg("accrual poller started")
+	a.log.Info().Msg("accrual integration started")
 	for {
 		select {
 		case <-ctx.Done():
-			a.log.Info().Msg("accrual poller stopped")
+			a.log.Info().Msg("accrual integration stopped")
 			a.status = AccrualStopped
 			return
 		case <-a.timingCh:

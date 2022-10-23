@@ -8,8 +8,6 @@ import (
 
 // Repo - интерфейс репозитория
 type Repo interface {
-	// Close - закрывает соединение с БД.
-	Close() error
 	// UserCreate - создает пользователя по логину и хэшу пароля
 	UserCreate(ctx context.Context, u *models.User) error
 	// UserGetByID - возвращает пользователя по id.

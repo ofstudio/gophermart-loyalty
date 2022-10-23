@@ -67,7 +67,7 @@ func (suite *pgxRepoSuite) SetupTest() {
 
 func (suite *pgxRepoSuite) TearDownTest() {
 	// Закрываем соединение
-	suite.NoError(suite.repo.Close())
+	suite.repo.Close()
 }
 
 func (suite *pgxRepoSuite) ctx() context.Context {

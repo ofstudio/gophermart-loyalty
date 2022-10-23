@@ -24,10 +24,13 @@ func NewPGXRepo(cfg *config.DB, log logger.Log) (*PGXRepo, error) {
 
 	// Подключаемся к БД
 	db, err := sql.Open("pgx", cfg.URI)
-	if err != nil || db.Ping() != nil {
-		return nil, fmt.Errorf("failed to open database connection: %w", err)
+	if err != nil {
+		return nil, fmt.Errorf("db open error: %w", err)
 	}
-	log.Info().Msg("connected to db")
+	if err = db.Ping(); err != nil {
+		return nil, fmt.Errorf("db connection error: %w", err)
+	}
+	log.Info().Msg("db connected")
 
 	// Запускаем миграцию БД
 	ver, err := migrations.Migrate(db)
@@ -46,7 +49,8 @@ func NewPGXRepo(cfg *config.DB, log logger.Log) (*PGXRepo, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Info().Msg("statements prepared")
+	log.Info().Msg("db statements prepared")
+	log.Info().Msg("repo created")
 	return &PGXRepo{db: db, log: log, stmts: stmts}, nil
 }
 
@@ -56,6 +60,9 @@ func (r *PGXRepo) DB() *sql.DB {
 }
 
 // Close - закрывает соединение с БД.
-func (r *PGXRepo) Close() error {
-	return r.db.Close()
+func (r *PGXRepo) Close() {
+	if err := r.db.Close(); err != nil {
+		r.log.Error().Err(err).Msg("failed to close db connection")
+	}
+	r.log.Info().Msg("repo closed")
 }

@@ -39,20 +39,6 @@ func (_m *Repo) BalanceHistoryGetByID(ctx context.Context, userID uint64) ([]*mo
 	return r0, r1
 }
 
-// Close provides a mock function with given fields:
-func (_m *Repo) Close() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // OperationCreate provides a mock function with given fields: ctx, op
 func (_m *Repo) OperationCreate(ctx context.Context, op *models.Operation) error {
 	ret := _m.Called(ctx, op)
