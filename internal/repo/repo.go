@@ -13,9 +13,9 @@ import (
 
 // PGXRepo - репозиторий для работы с Postgres.
 type PGXRepo struct {
-	db    *sql.DB
-	log   logger.Log
-	stmts []*sql.Stmt
+	db         *sql.DB
+	log        logger.Log
+	statements []*sql.Stmt
 }
 
 // NewPGXRepo - создает новый репозиторий
@@ -45,13 +45,13 @@ func NewPGXRepo(cfg *config.DB, log logger.Log) (*PGXRepo, error) {
 	log.Info().Msgf("db migrated to version %d", ver)
 
 	// Подготавливаем стейтменты
-	stmts, err := prepareStmts(db)
+	stmts, err := prepareStatements(db)
 	if err != nil {
 		return nil, err
 	}
 	log.Info().Msg("db statements prepared")
 	log.Info().Msg("repo created")
-	return &PGXRepo{db: db, log: log, stmts: stmts}, nil
+	return &PGXRepo{db: db, log: log, statements: stmts}, nil
 }
 
 // DB - возвращает соединение с БД.

@@ -20,7 +20,7 @@ import (
 // Возвращает id, created_at, updated_at операции.
 // ВАЖНО: может вызываться только внутри транзакции и только после вызова PGXRepo.userLockTx.
 // После вызова необходимо обновить баланс пользователя при помощи PGXRepo.userUpdateBalanceTx.
-var stmtOperationCreate = registerStmt(`
+var stmtOperationCreate = registerStatement(`
 	INSERT INTO operations (user_id, op_type, status, amount, description, order_number, promo_id)
 	VALUES ($1, $2, $3, $4, $5, $6, $7)
 	RETURNING id, created_at, updated_at
@@ -45,7 +45,7 @@ func (r *PGXRepo) OperationCreate(ctx context.Context, op *models.Operation) err
 	}
 
 	// Создаем операцию
-	err = tx.Stmt(r.stmts[stmtOperationCreate]).
+	err = tx.Stmt(r.statements[stmtOperationCreate]).
 		QueryRowContext(ctx, op.UserID, op.Type, op.Status, op.Amount, op.Description, op.OrderNumber, op.PromoID).
 		Scan(&op.ID, &op.CreatedAt, &op.UpdatedAt)
 	if err != nil {
@@ -71,7 +71,7 @@ type UpdateFunc func(ctx context.Context, operation *models.Operation) error
 //     $1 - op_type
 // Возвращает id, user_id, op_type, status, amount, description, order_number, promo_id операции.
 // ВАЖНО: может вызываться только внутри транзакции.
-var stmtOperationLockFurther = registerStmt(`
+var stmtOperationLockFurther = registerStatement(`
 		SELECT id, user_id, op_type, status, amount, description, order_number, promo_id, created_at, updated_at
 		FROM operations 
 		WHERE status IN ('NEW', 'PROCESSING') AND op_type = $1
@@ -83,7 +83,7 @@ var stmtOperationLockFurther = registerStmt(`
 // stmtOperationUpdate - обновляет status и amount операции.
 // ВАЖНО: может вызываться только внутри транзакции и только после вызова PGXRepo.userLockTx.
 // После вызова необходимо обновить баланс пользователя при помощи PGXRepo.userUpdateBalanceTx.
-var stmtOperationUpdate = registerStmt(`
+var stmtOperationUpdate = registerStatement(`
 	UPDATE operations
 	SET status = $2, amount = $3, updated_at = now()
 	WHERE id = $1
@@ -104,7 +104,7 @@ func (r *PGXRepo) OperationUpdateFurther(ctx context.Context, opType models.Oper
 
 	// Находим операцию для обновления блокируем ее
 	op := &models.Operation{}
-	err = tx.Stmt(r.stmts[stmtOperationLockFurther]).
+	err = tx.Stmt(r.statements[stmtOperationLockFurther]).
 		QueryRowContext(ctx, opType).
 		Scan(
 			&op.ID,
@@ -133,7 +133,7 @@ func (r *PGXRepo) OperationUpdateFurther(ctx context.Context, opType models.Oper
 	}
 
 	// Обновляем операцию
-	err = tx.Stmt(r.stmts[stmtOperationUpdate]).
+	err = tx.Stmt(r.statements[stmtOperationUpdate]).
 		QueryRowContext(ctx, op.ID, op.Status, op.Amount).
 		Scan(&sql.NullInt64{})
 	if err != nil {
@@ -157,7 +157,7 @@ func (r *PGXRepo) OperationUpdateFurther(ctx context.Context, opType models.Oper
 //    $2 - op_type
 // Возвращает id, user_id, op_type, status, amount, description,
 // order_number, promo_id, created_at, updated_at операции.
-var stmtOperationGetByType = registerStmt(`
+var stmtOperationGetByType = registerStatement(`
 	SELECT id, user_id, op_type, status, amount, description, order_number, promo_id, created_at, updated_at
 	FROM operations
 	WHERE user_id = $1 AND op_type = $2
@@ -166,7 +166,7 @@ var stmtOperationGetByType = registerStmt(`
 
 // OperationGetByType - возвращает список операций пользователя заданного типа.
 func (r *PGXRepo) OperationGetByType(ctx context.Context, userID uint64, t models.OperationType) ([]*models.Operation, error) {
-	rows, err := r.stmts[stmtOperationGetByType].QueryContext(ctx, userID, t)
+	rows, err := r.statements[stmtOperationGetByType].QueryContext(ctx, userID, t)
 	if err != nil {
 		return nil, r.handleError(ctx, err)
 	}

@@ -11,7 +11,7 @@ import (
 //    $1 - username
 //    $2 - pass_hash
 // Возвращает id, balance, withdrawn, created_at, updated_at.
-var stmtUserCreate = registerStmt(`
+var stmtUserCreate = registerStatement(`
 	INSERT INTO users (username, pass_hash) 
 	VALUES ($1, $2) 
 	RETURNING id, balance, withdrawn, created_at, updated_at
@@ -19,7 +19,7 @@ var stmtUserCreate = registerStmt(`
 
 // UserCreate - создает пользователя по логину и хэшу пароля
 func (r *PGXRepo) UserCreate(ctx context.Context, u *models.User) error {
-	err := r.stmts[stmtUserCreate].
+	err := r.statements[stmtUserCreate].
 		QueryRowContext(ctx, u.Login, u.PassHash).
 		Scan(&u.ID, &u.Balance, &u.Withdrawn, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
@@ -31,7 +31,7 @@ func (r *PGXRepo) UserCreate(ctx context.Context, u *models.User) error {
 // stmtUserGetByID - возвращает пользователя по id.
 //    $1 - id
 // Возвращает id, username, pass_hash, balance, withdrawn, created_at, updated_at.
-var stmtUserGetByID = registerStmt(`
+var stmtUserGetByID = registerStatement(`
 	SELECT id, username, pass_hash, balance, withdrawn, created_at, updated_at FROM users
 	WHERE id = $1
 `)
@@ -39,7 +39,7 @@ var stmtUserGetByID = registerStmt(`
 // UserGetByID - возвращает пользователя по id.
 func (r *PGXRepo) UserGetByID(ctx context.Context, userID uint64) (*models.User, error) {
 	u := &models.User{}
-	err := r.stmts[stmtUserGetByID].
+	err := r.statements[stmtUserGetByID].
 		QueryRowContext(ctx, userID).
 		Scan(&u.ID, &u.Login, &u.PassHash, &u.Balance, &u.Withdrawn, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
@@ -51,7 +51,7 @@ func (r *PGXRepo) UserGetByID(ctx context.Context, userID uint64) (*models.User,
 // stmtUserGetByLogin - возвращает пользователя по логину.
 //    $1 - username
 // Возвращает id, username, pass_hash, balance, withdrawn, created_at, updated_at.
-var stmtUserGetByLogin = registerStmt(`
+var stmtUserGetByLogin = registerStatement(`
 	SELECT id, username, pass_hash, balance, withdrawn, created_at, updated_at  FROM users
 	WHERE username = $1
 `)
@@ -59,7 +59,7 @@ var stmtUserGetByLogin = registerStmt(`
 // UserGetByLogin - возвращает пользователя по логину.
 func (r *PGXRepo) UserGetByLogin(ctx context.Context, login string) (*models.User, error) {
 	u := &models.User{}
-	err := r.stmts[stmtUserGetByLogin].
+	err := r.statements[stmtUserGetByLogin].
 		QueryRowContext(ctx, login).
 		Scan(&u.ID, &u.Login, &u.PassHash, &u.Balance, &u.Withdrawn, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
@@ -72,14 +72,14 @@ func (r *PGXRepo) UserGetByLogin(ctx context.Context, login string) (*models.Use
 //    $1 - id пользователя
 // Возвращает id пользователя.
 // ВАЖНО: может вызываться только внутри транзакции.
-var stmtUserLock = registerStmt(`
+var stmtUserLock = registerStatement(`
 	SELECT id FROM users WHERE id = $1 FOR UPDATE 
 `)
 
 // userLockTx - блокирует пользователя для обновления другими транзакциями.
 // ВАЖНО: может вызываться только внутри транзакции
 func (r *PGXRepo) userLockTx(ctx context.Context, tx *sql.Tx, userID uint64) error {
-	if err := tx.Stmt(r.stmts[stmtUserLock]).
+	if err := tx.Stmt(r.statements[stmtUserLock]).
 		QueryRowContext(ctx, userID).
 		Scan(&sql.NullInt64{}); err != nil {
 		return r.handleError(ctx, err)
@@ -91,7 +91,7 @@ func (r *PGXRepo) userLockTx(ctx context.Context, tx *sql.Tx, userID uint64) err
 //    $1 - id пользователя
 // Возвращает id пользователя.
 // ВАЖНО: может вызываться только внутри транзакции и только после вызова PGXRepo.userLockTx
-var stmtUserUpdateBalance = registerStmt(`
+var stmtUserUpdateBalance = registerStatement(`
 	WITH
 	    total_accrued AS (
 	    	SELECT coalesce(sum(amount), 0) AS val FROM operations
@@ -114,7 +114,7 @@ var stmtUserUpdateBalance = registerStmt(`
 // userUpdateBalance - обновляет баланс пользователя.
 // ВАЖНО: может вызываться только внутри транзакции и только после вызова PGXRepo.userLockTx
 func (r *PGXRepo) userUpdateBalanceTx(ctx context.Context, tx *sql.Tx, userID uint64) error {
-	err := tx.Stmt(r.stmts[stmtUserUpdateBalance]).
+	err := tx.Stmt(r.statements[stmtUserUpdateBalance]).
 		QueryRowContext(ctx, userID).
 		Scan(&sql.NullInt64{})
 	if err != nil {
@@ -127,7 +127,7 @@ func (r *PGXRepo) userUpdateBalanceTx(ctx context.Context, tx *sql.Tx, userID ui
 //    $1 - user_id
 // Возвращает id, user_id, op_type, status, amount, description,
 // order_number, promo_id, created_at, updated_at операции.
-var stmtUserBalanceHistoryGetByID = registerStmt(`
+var stmtUserBalanceHistoryGetByID = registerStatement(`
 	SELECT id, user_id, op_type, status, amount, description, order_number, promo_id, created_at, updated_at
 	FROM operations
 	WHERE user_id = $1 AND (
@@ -140,7 +140,7 @@ var stmtUserBalanceHistoryGetByID = registerStmt(`
 
 // UserBalanceHistoryGetByID - возвращает список операций пользователя, учитывающихся в балансе.
 func (r *PGXRepo) UserBalanceHistoryGetByID(ctx context.Context, userID uint64) ([]*models.Operation, error) {
-	rows, err := r.stmts[stmtUserBalanceHistoryGetByID].QueryContext(ctx, userID)
+	rows, err := r.statements[stmtUserBalanceHistoryGetByID].QueryContext(ctx, userID)
 	if err != nil {
 		return nil, r.handleError(ctx, err)
 	}

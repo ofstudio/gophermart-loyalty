@@ -5,20 +5,20 @@ import (
 	"fmt"
 )
 
-var stmtQueries []string
+var queries []string
 
-// registerStmt - добавляет запрос в список запросов к БД.
+// registerStatement - добавляет запрос в список запросов к БД.
 // Возвращает индекс запроса в списке.
-func registerStmt(query string) int {
-	stmtQueries = append(stmtQueries, query)
-	return len(stmtQueries) - 1
+func registerStatement(query string) int {
+	queries = append(queries, query)
+	return len(queries) - 1
 }
 
-// prepareStmts - подготавливает стейтменты к БД.
+// prepareStatements - подготавливает стейтменты к БД.
 // Возвращает список подготовленных стейтментов.
-func prepareStmts(db *sql.DB) ([]*sql.Stmt, error) {
-	statements := make([]*sql.Stmt, len(stmtQueries))
-	for id, query := range stmtQueries {
+func prepareStatements(db *sql.DB) ([]*sql.Stmt, error) {
+	statements := make([]*sql.Stmt, len(queries))
+	for id, query := range queries {
 		s, err := db.Prepare(query)
 		if err != nil {
 			return nil, fmt.Errorf("failed to prepare statement: %w in `%s`", err, query)

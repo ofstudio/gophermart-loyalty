@@ -13,7 +13,7 @@ import (
 //    $4 - not_before
 //	  $5 - not_after
 // Возвращает id новой промо-кампании.
-var stmtPromoCreate = registerStmt(`
+var stmtPromoCreate = registerStatement(`
 	INSERT INTO promos (code, description, reward, not_before, not_after)
 	VALUES ($1, $2, $3, $4, $5)
 	RETURNING id
@@ -21,7 +21,7 @@ var stmtPromoCreate = registerStmt(`
 
 // PromoCreate - создает промо-кампанию.
 func (r *PGXRepo) PromoCreate(ctx context.Context, p *models.Promo) error {
-	err := r.stmts[stmtPromoCreate].
+	err := r.statements[stmtPromoCreate].
 		QueryRowContext(ctx, &p.Code, &p.Description, &p.Reward, &p.NotBefore, &p.NotAfter).
 		Scan(&p.ID)
 	if err != nil {
@@ -33,7 +33,7 @@ func (r *PGXRepo) PromoCreate(ctx context.Context, p *models.Promo) error {
 // stmtPromoGetByCode - возвращает промо-кампанию по коду.
 //    $1 - code
 // Возвращает id, code, description, reward, valid_until, created_at.
-var stmtPromoGetByCode = registerStmt(`
+var stmtPromoGetByCode = registerStatement(`
 	SELECT id, code, description, reward, not_before, not_after, created_at 
 	FROM promos
 	WHERE code = $1
@@ -42,7 +42,7 @@ var stmtPromoGetByCode = registerStmt(`
 // PromoGetByCode - возвращает промо-кампанию по ее промо-коду.
 func (r *PGXRepo) PromoGetByCode(ctx context.Context, code string) (*models.Promo, error) {
 	p := &models.Promo{}
-	err := r.stmts[stmtPromoGetByCode].
+	err := r.statements[stmtPromoGetByCode].
 		QueryRowContext(ctx, code).
 		Scan(&p.ID, &p.Code, &p.Description, &p.Reward, &p.NotBefore, &p.NotAfter, &p.CreatedAt)
 	if err != nil {
