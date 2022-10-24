@@ -3,10 +3,8 @@ package handlers
 import (
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/go-chi/render"
-	"github.com/shopspring/decimal"
 
 	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/middleware"
@@ -61,16 +59,6 @@ func (h *Handlers) orderAccrualCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusAccepted)
-}
-
-type OrderWithdrawalCreateRequest struct {
-	OrderNumber string          `json:"order"`
-	Amount      decimal.Decimal `json:"sum"`
-}
-
-func (o *OrderWithdrawalCreateRequest) Bind(_ *http.Request) error {
-	o.Amount = o.Amount.Neg()
-	return nil
 }
 
 // orderWithdrawalCreate - создание операции списания бонусов.
@@ -164,30 +152,6 @@ func (h *Handlers) promoAccrualCreate(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-type OrderAccrualListResponse struct {
-	OrderNumber *string                `json:"number"`
-	Status      models.OperationStatus `json:"status"`
-	Amount      decimal.Decimal        `json:"accrual,omitempty"`
-	CreatedAt   string                 `json:"uploaded_at"`
-}
-
-func (o *OrderAccrualListResponse) Render(_ http.ResponseWriter, _ *http.Request) error {
-	return nil
-}
-
-func NewOrderAccrualListResponse(ops []*models.Operation) []render.Renderer {
-	list := make([]render.Renderer, len(ops))
-	for i, op := range ops {
-		list[i] = &OrderAccrualListResponse{
-			OrderNumber: op.OrderNumber,
-			Status:      op.Status,
-			Amount:      op.Amount,
-			CreatedAt:   op.CreatedAt.Format(timeFmt),
-		}
-	}
-	return list
-}
-
 // orderAccrualList - получение списка загруженных номеров заказов.
 // Формат запроса:
 //    GET /api/user/orders HTTP/1.1
@@ -241,20 +205,8 @@ func (h *Handlers) orderAccrualList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = render.RenderList(w, r, NewOrderAccrualListResponse(operations))
+	_ = render.RenderList(w, r, newOrderAccrualListResponse(operations))
 
-}
-
-type OrderWithdrawalListResponse struct {
-	OrderNumber *string                `json:"order"`
-	Status      models.OperationStatus `json:"status"`
-	Amount      decimal.Decimal        `json:"sum"`
-	UpdatedAt   time.Time              `json:"processed_at"`
-}
-
-func (o *OrderWithdrawalListResponse) Render(_ http.ResponseWriter, _ *http.Request) error {
-	o.Amount = o.Amount.Neg() // меняем знак
-	return nil
 }
 
 func NewOrderWithdrawalListResponse(ops []*models.Operation) []render.Renderer {

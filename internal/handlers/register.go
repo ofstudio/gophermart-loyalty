@@ -8,15 +8,6 @@ import (
 	"gophermart-loyalty/internal/errs"
 )
 
-type RegisterRequest struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
-}
-
-func (req *RegisterRequest) Bind(_ *http.Request) error {
-	return nil
-}
-
 // register - регистрация пользователя.
 // Формат запроса:
 //    POST /api/user/register HTTP/1.1

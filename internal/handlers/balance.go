@@ -5,21 +5,10 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
-	"github.com/shopspring/decimal"
 
 	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/middleware"
-	"gophermart-loyalty/internal/models"
 )
-
-type BalanceResponse struct {
-	Current   decimal.Decimal `json:"current"`
-	Withdrawn decimal.Decimal `json:"withdrawn"`
-}
-
-func (b *BalanceResponse) Render(_ http.ResponseWriter, _ *http.Request) error {
-	return nil
-}
 
 // balanceGet - получение текущего баланса пользователя.
 // Формат запроса:
@@ -64,30 +53,6 @@ func (h *Handlers) balanceGet(w http.ResponseWriter, r *http.Request) {
 		Current:   user.Balance,
 		Withdrawn: user.Withdrawn,
 	})
-}
-
-type BalanceHistoryResponse struct {
-	Amount      decimal.Decimal `json:"amount"`
-	OrderNumber *string         `json:"number,omitempty"`
-	Description string          `json:"description"`
-	ProcessedAt string          `json:"processed_at"`
-}
-
-func (b *BalanceHistoryResponse) Render(_ http.ResponseWriter, _ *http.Request) error {
-	return nil
-}
-
-func NewBalanceHistoryResponse(ops []*models.Operation) []render.Renderer {
-	list := make([]render.Renderer, len(ops))
-	for i, op := range ops {
-		list[i] = &BalanceHistoryResponse{
-			Amount:      op.Amount,
-			OrderNumber: op.OrderNumber,
-			Description: op.Description,
-			ProcessedAt: op.UpdatedAt.Format(timeFmt),
-		}
-	}
-	return list
 }
 
 // balanceHistoryGet - запрос истории операций по балансу пользователя.
@@ -148,5 +113,5 @@ func (h *Handlers) balanceHistoryGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Отправляем ответ
-	_ = render.RenderList(w, r, NewBalanceHistoryResponse(history))
+	_ = render.RenderList(w, r, newBalanceHistoryResponse(history))
 }

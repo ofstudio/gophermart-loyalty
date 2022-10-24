@@ -10,25 +10,6 @@ import (
 	"gophermart-loyalty/internal/errs"
 )
 
-type LoginRequest struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
-}
-
-func (req *LoginRequest) Bind(_ *http.Request) error {
-	return nil
-}
-
-type LoginResponse struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int64  `json:"expires_in"`
-}
-
-func (res *LoginResponse) Render(_ http.ResponseWriter, _ *http.Request) error {
-	return nil
-}
-
 // login - аутентификация пользователя.
 // Формат запроса:
 //     POST /api/user/login HTTP/1.1
