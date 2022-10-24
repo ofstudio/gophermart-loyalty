@@ -1,16 +1,12 @@
 package handlers
 
 import (
-	"io/ioutil"
-	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/render"
 	"github.com/shopspring/decimal"
 
 	"gophermart-loyalty/internal/config"
-	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/logger"
 	"gophermart-loyalty/internal/middleware"
 	"gophermart-loyalty/internal/usecases"
@@ -55,16 +51,4 @@ func (h *Handlers) InitRoutes() chi.Router {
 	})
 
 	return r
-}
-
-func decodePlainText(r *http.Request) (string, error) {
-	contentType := render.GetRequestContentType(r)
-	if contentType != render.ContentTypePlainText {
-		return "", errs.ErrBadRequest
-	}
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(data), nil
 }
