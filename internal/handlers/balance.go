@@ -8,6 +8,7 @@ import (
 	"github.com/shopspring/decimal"
 
 	"gophermart-loyalty/internal/errs"
+	"gophermart-loyalty/internal/middleware"
 	"gophermart-loyalty/internal/models"
 )
 
@@ -41,7 +42,7 @@ func (b *BalanceResponse) Render(_ http.ResponseWriter, _ *http.Request) error {
 //    }
 func (h *Handlers) balanceGet(w http.ResponseWriter, r *http.Request) {
 	// Получаем пользователя из контекста
-	userID, ok := h.getUserID(r.Context())
+	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
 		_ = render.Render(w, r, errs.ErrResponseUnauthorized)
 		return
@@ -127,7 +128,7 @@ func NewBalanceHistoryResponse(ops []*models.Operation) []render.Renderer {
 //    ]
 func (h *Handlers) balanceHistoryGet(w http.ResponseWriter, r *http.Request) {
 	// Получаем пользователя из контекста
-	userID, ok := h.getUserID(r.Context())
+	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
 		_ = render.Render(w, r, errs.ErrResponseUnauthorized)
 		return

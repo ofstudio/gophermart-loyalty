@@ -1,11 +1,10 @@
-package handlers
+package middleware
 
 import (
 	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // - [x] Успешная авторизация
@@ -20,22 +19,28 @@ import (
 // - [x] Токен не содержит поле exp
 // - [x] Токен не содержит поле nbf
 
-func (suite *handlersSuite) TestAuthMiddleware() {
+func (suite *middlewareSuite) TestAuthMiddleware() {
 	suite.Run("success", func() {
-		token := suite.validJWTToken(1)
-		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
+		claims := jwt.MapClaims{
+			"sub": 1,
+			"iat": time.Now().Unix(),
+			"nbf": time.Now().Unix(),
+			"exp": time.Now().Add(1 * time.Hour).Unix(),
+		}
+		token := suite.generateJWTToken(claims, "HS256", "test1234567890")
+		res := suite.httpRequest(http.MethodGet, "/private", "", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusOK, res.StatusCode)
 	})
 
 	suite.Run("no token", func() {
-		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", "")
+		res := suite.httpRequest(http.MethodGet, "/private", "", "", "")
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
 
 	suite.Run("invalid token", func() {
-		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", "invalid token")
+		res := suite.httpRequest(http.MethodGet, "/private", "", "", "invalid token")
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
@@ -47,9 +52,9 @@ func (suite *handlersSuite) TestAuthMiddleware() {
 			"nbf": time.Now().Unix(),
 			"exp": time.Now().Add(1 * time.Hour).Unix(),
 		}
-		token := suite.generateJWTToken(claims, suite.handlers.cfg.SigningAlg, "invalid key")
+		token := suite.generateJWTToken(claims, "HS256", "wrong key")
 
-		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
+		res := suite.httpRequest(http.MethodGet, "/private", "", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
@@ -61,8 +66,8 @@ func (suite *handlersSuite) TestAuthMiddleware() {
 			"nbf": time.Now().Unix(),
 			"exp": time.Now().Add(1 * time.Hour).Unix(),
 		}
-		token := suite.generateJWTToken(claims, "HS384", suite.handlers.cfg.SigningKey)
-		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
+		token := suite.generateJWTToken(claims, "HS384", "test1234567890")
+		res := suite.httpRequest(http.MethodGet, "/private", "", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
@@ -74,9 +79,9 @@ func (suite *handlersSuite) TestAuthMiddleware() {
 			"nbf": time.Now().Unix(),
 			"exp": time.Now().Add(-1 * time.Hour).Unix(),
 		}
-		token := suite.generateJWTToken(claims, suite.handlers.cfg.SigningAlg, suite.handlers.cfg.SigningKey)
+		token := suite.generateJWTToken(claims, "HS256", "test1234567890")
 
-		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
+		res := suite.httpRequest(http.MethodGet, "/private", "", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
@@ -88,9 +93,9 @@ func (suite *handlersSuite) TestAuthMiddleware() {
 			"nbf": time.Now().Add(1 * time.Hour).Unix(),
 			"exp": time.Now().Add(2 * time.Hour).Unix(),
 		}
-		token := suite.generateJWTToken(claims, suite.handlers.cfg.SigningAlg, suite.handlers.cfg.SigningKey)
+		token := suite.generateJWTToken(claims, "HS256", "test1234567890")
 
-		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
+		res := suite.httpRequest(http.MethodGet, "/private", "", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
@@ -101,8 +106,8 @@ func (suite *handlersSuite) TestAuthMiddleware() {
 			"nbf": time.Now().Unix(),
 			"exp": time.Now().Add(1 * time.Hour).Unix(),
 		}
-		token := suite.generateJWTToken(claims, suite.handlers.cfg.SigningAlg, suite.handlers.cfg.SigningKey)
-		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
+		token := suite.generateJWTToken(claims, "HS256", "test1234567890")
+		res := suite.httpRequest(http.MethodGet, "/private", "", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
@@ -114,8 +119,8 @@ func (suite *handlersSuite) TestAuthMiddleware() {
 			"nbf": time.Now().Unix(),
 			"exp": time.Now().Add(1 * time.Hour).Unix(),
 		}
-		token := suite.generateJWTToken(claims, suite.handlers.cfg.SigningAlg, suite.handlers.cfg.SigningKey)
-		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
+		token := suite.generateJWTToken(claims, "HS256", "test1234567890")
+		res := suite.httpRequest(http.MethodGet, "/private", "", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
@@ -126,8 +131,8 @@ func (suite *handlersSuite) TestAuthMiddleware() {
 			"iat": time.Now().Unix(),
 			"nbf": time.Now().Unix(),
 		}
-		token := suite.generateJWTToken(claims, suite.handlers.cfg.SigningAlg, suite.handlers.cfg.SigningKey)
-		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
+		token := suite.generateJWTToken(claims, "HS256", "test1234567890")
+		res := suite.httpRequest(http.MethodGet, "/private", "", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
@@ -138,35 +143,19 @@ func (suite *handlersSuite) TestAuthMiddleware() {
 			"iat": time.Now().Unix(),
 			"exp": time.Now().Add(1 * time.Hour).Unix(),
 		}
-		token := suite.generateJWTToken(claims, suite.handlers.cfg.SigningAlg, suite.handlers.cfg.SigningKey)
-		res := suite.httpJSONRequest(http.MethodGet, "/test-auth", "", token)
+		token := suite.generateJWTToken(claims, "HS256", "test1234567890")
+		res := suite.httpRequest(http.MethodGet, "/private", "", "", token)
 		defer res.Body.Close()
 		suite.Equal(http.StatusUnauthorized, res.StatusCode)
 	})
 
 }
 
-func (suite *handlersSuite) validJWTToken(userID uint64) string {
-	claims := jwt.MapClaims{
-		"sub": userID,
-		"iat": time.Now().Unix(),
-		"nbf": time.Now().Unix(),
-		"exp": time.Now().Add(1 * time.Hour).Unix(),
-	}
-	return suite.generateJWTToken(claims, suite.handlers.cfg.SigningAlg, suite.handlers.cfg.SigningKey)
-}
-
-func (suite *handlersSuite) generateJWTToken(claims jwt.Claims, alg, key string) string {
+func (suite *middlewareSuite) generateJWTToken(claims jwt.Claims, alg, key string) string {
 	signingMethod := jwt.GetSigningMethod(alg)
 	suite.Require().NotNil(signingMethod)
 	token := jwt.NewWithClaims(signingMethod, claims)
 	tokenString, err := token.SignedString([]byte(key))
 	suite.Require().NoError(err)
 	return tokenString
-}
-
-func (suite *handlersSuite) passHash(p string) string {
-	hash, err := bcrypt.GenerateFromPassword([]byte(p), bcrypt.DefaultCost)
-	suite.NoError(err)
-	return string(hash)
 }

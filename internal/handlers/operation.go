@@ -9,6 +9,7 @@ import (
 	"github.com/shopspring/decimal"
 
 	"gophermart-loyalty/internal/errs"
+	"gophermart-loyalty/internal/middleware"
 	"gophermart-loyalty/internal/models"
 )
 
@@ -29,7 +30,7 @@ import (
 //    500 — внутренняя ошибка сервера
 func (h *Handlers) orderAccrualCreate(w http.ResponseWriter, r *http.Request) {
 	// Получаем пользователя из контекста
-	userID, ok := h.getUserID(r.Context())
+	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
 		_ = render.Render(w, r, errs.ErrResponseUnauthorized)
 		return
@@ -92,7 +93,7 @@ func (o *OrderWithdrawalCreateRequest) Bind(_ *http.Request) error {
 //    500 — внутренняя ошибка сервера
 func (h *Handlers) orderWithdrawalCreate(w http.ResponseWriter, r *http.Request) {
 	// Получаем пользователя из контекста
-	userID, ok := h.getUserID(r.Context())
+	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
 		_ = render.Render(w, r, errs.ErrResponseUnauthorized)
 		return
@@ -135,7 +136,7 @@ func (h *Handlers) orderWithdrawalCreate(w http.ResponseWriter, r *http.Request)
 //    500 — внутренняя ошибка сервера
 func (h *Handlers) promoAccrualCreate(w http.ResponseWriter, r *http.Request) {
 	// Получаем пользователя из контекста
-	userID, ok := h.getUserID(r.Context())
+	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
 		_ = render.Render(w, r, errs.ErrResponseUnauthorized)
 		return
@@ -222,7 +223,7 @@ func NewOrderAccrualListResponse(ops []*models.Operation) []render.Renderer {
 //    ]
 func (h *Handlers) orderAccrualList(w http.ResponseWriter, r *http.Request) {
 	// Получаем пользователя из контекста
-	userID, ok := h.getUserID(r.Context())
+	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
 		_ = render.Render(w, r, errs.ErrResponseUnauthorized)
 		return
@@ -293,7 +294,7 @@ func NewOrderWithdrawalListResponse(ops []*models.Operation) []render.Renderer {
 //    ]
 func (h *Handlers) orderWithdrawalList(w http.ResponseWriter, r *http.Request) {
 	// Получаем пользователя из контекста
-	userID, ok := h.getUserID(r.Context())
+	userID, ok := middleware.GetUserID(r.Context())
 	if !ok {
 		_ = render.Render(w, r, errs.ErrResponseUnauthorized)
 		return

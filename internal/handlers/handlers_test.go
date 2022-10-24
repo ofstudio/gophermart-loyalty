@@ -10,9 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/suite"
+	"golang.org/x/crypto/bcrypt"
 
 	"gophermart-loyalty/internal/config"
 	"gophermart-loyalty/internal/logger"
@@ -48,14 +49,6 @@ func (suite *handlersSuite) SetupTest() {
 	suite.useCases = usecases.NewUseCases(suite.repo, suite.log)
 	suite.handlers = NewHandlers(suite.cfg, suite.useCases, suite.log)
 	r := suite.handlers.Routes()
-
-	// Дополнительный раут для тестирования авторизации
-	r.Group(func(r chi.Router) {
-		r.Use(suite.handlers.authMiddleware)
-		r.Get("/test-auth", func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-		})
-	})
 
 	suite.testServer = httptest.NewServer(r)
 }
@@ -102,6 +95,31 @@ func (suite *handlersSuite) getBody(body io.Reader) []byte {
 	_, err := buf.ReadFrom(body)
 	suite.NoError(err)
 	return buf.Bytes()
+}
+
+func (suite *handlersSuite) validJWTToken(userID uint64) string {
+	claims := jwt.MapClaims{
+		"sub": userID,
+		"iat": time.Now().Unix(),
+		"nbf": time.Now().Unix(),
+		"exp": time.Now().Add(1 * time.Hour).Unix(),
+	}
+	return suite.generateJWTToken(claims, suite.handlers.cfg.SigningAlg, suite.handlers.cfg.SigningKey)
+}
+
+func (suite *handlersSuite) generateJWTToken(claims jwt.Claims, alg, key string) string {
+	signingMethod := jwt.GetSigningMethod(alg)
+	suite.Require().NotNil(signingMethod)
+	token := jwt.NewWithClaims(signingMethod, claims)
+	tokenString, err := token.SignedString([]byte(key))
+	suite.Require().NoError(err)
+	return tokenString
+}
+
+func (suite *handlersSuite) passHash(p string) string {
+	hash, err := bcrypt.GenerateFromPassword([]byte(p), bcrypt.DefaultCost)
+	suite.NoError(err)
+	return string(hash)
 }
 
 func strPtr(s string) *string {

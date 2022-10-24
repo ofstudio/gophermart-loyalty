@@ -12,6 +12,7 @@ import (
 	"gophermart-loyalty/internal/config"
 	"gophermart-loyalty/internal/errs"
 	"gophermart-loyalty/internal/logger"
+	"gophermart-loyalty/internal/middleware"
 	"gophermart-loyalty/internal/usecases"
 )
 
@@ -43,7 +44,7 @@ func (h *Handlers) Routes() chi.Router {
 
 	// Доступны только авторизованным пользователям
 	r.Group(func(r chi.Router) {
-		r.Use(h.authMiddleware)
+		r.Use(middleware.Auth(h.cfg.SigningAlg, h.cfg.SigningKey))
 		r.Post("/orders", h.orderAccrualCreate)
 		r.Get("/orders", h.orderAccrualList)
 		r.Post("/balance/withdraw", h.orderWithdrawalCreate)
