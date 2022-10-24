@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"errors"
 	"regexp"
 
 	"golang.org/x/crypto/bcrypt"
@@ -76,4 +77,16 @@ func (u *UseCases) UserGetByID(ctx context.Context, userID uint64) (*models.User
 	}
 	u.log.WithReqID(ctx).Debug().Msg("user found")
 	return user, nil
+}
+
+// UserBalanceHistoryGetByID - возвращает список операций пользователя, учитывающихся в балансе.
+func (u *UseCases) UserBalanceHistoryGetByID(ctx context.Context, userID uint64) ([]*models.Operation, error) {
+	list, err := u.repo.UserBalanceHistoryGetByID(ctx, userID)
+	if errors.Is(err, errs.ErrNotFound) {
+		return nil, nil
+	} else if err != nil {
+		u.log.WithReqID(ctx).Error().Err(err).Msg("failed to get balance history")
+		return nil, err
+	}
+	return list, nil
 }

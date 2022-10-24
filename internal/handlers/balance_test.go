@@ -88,7 +88,7 @@ func (suite *handlersSuite) TestBalanceHistoryGet() {
 	}
 
 	suite.Run("success", func() {
-		suite.repo.On("BalanceHistoryGetByID", mock.Anything, uint64(1)).
+		suite.repo.On("UserBalanceHistoryGetByID", mock.Anything, uint64(1)).
 			Return(data, nil).Once()
 
 		token := suite.validJWTToken(1)
@@ -105,7 +105,7 @@ func (suite *handlersSuite) TestBalanceHistoryGet() {
 	})
 
 	suite.Run("empty", func() {
-		suite.repo.On("BalanceHistoryGetByID", mock.Anything, uint64(1)).
+		suite.repo.On("UserBalanceHistoryGetByID", mock.Anything, uint64(1)).
 			Return(nil, errs.ErrNotFound).Once()
 
 		token := suite.validJWTToken(1)
@@ -121,7 +121,7 @@ func (suite *handlersSuite) TestBalanceHistoryGet() {
 	})
 
 	suite.Run("internal error", func() {
-		suite.repo.On("BalanceHistoryGetByID", mock.Anything, uint64(1)).
+		suite.repo.On("UserBalanceHistoryGetByID", mock.Anything, uint64(1)).
 			Return(nil, errs.ErrInternal).Once()
 
 		token := suite.validJWTToken(1)

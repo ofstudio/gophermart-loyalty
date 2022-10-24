@@ -100,7 +100,7 @@ func (h *Handlers) balanceHistoryGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Запрашиваем историю операций пользователя
-	history, err := h.useCases.BalanceHistoryGetByID(r.Context(), userID)
+	history, err := h.useCases.UserBalanceHistoryGetByID(r.Context(), userID)
 	if err != nil {
 		_ = render.Render(w, r, errs.NewErrResponse(err))
 		return

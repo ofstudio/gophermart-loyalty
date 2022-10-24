@@ -16,29 +16,6 @@ type Repo struct {
 	mock.Mock
 }
 
-// BalanceHistoryGetByID provides a mock function with given fields: ctx, userID
-func (_m *Repo) BalanceHistoryGetByID(ctx context.Context, userID uint64) ([]*models.Operation, error) {
-	ret := _m.Called(ctx, userID)
-
-	var r0 []*models.Operation
-	if rf, ok := ret.Get(0).(func(context.Context, uint64) []*models.Operation); ok {
-		r0 = rf(ctx, userID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*models.Operation)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
-		r1 = rf(ctx, userID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // OperationCreate provides a mock function with given fields: ctx, op
 func (_m *Repo) OperationCreate(ctx context.Context, op *models.Operation) error {
 	ret := _m.Called(ctx, op)
@@ -129,6 +106,29 @@ func (_m *Repo) PromoGetByCode(ctx context.Context, code string) (*models.Promo,
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = rf(ctx, code)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UserBalanceHistoryGetByID provides a mock function with given fields: ctx, userID
+func (_m *Repo) UserBalanceHistoryGetByID(ctx context.Context, userID uint64) ([]*models.Operation, error) {
+	ret := _m.Called(ctx, userID)
+
+	var r0 []*models.Operation
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) []*models.Operation); ok {
+		r0 = rf(ctx, userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*models.Operation)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
+		r1 = rf(ctx, userID)
 	} else {
 		r1 = ret.Error(1)
 	}

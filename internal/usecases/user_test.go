@@ -2,7 +2,9 @@ package usecases
 
 import (
 	"strings"
+	"time"
 
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
 
@@ -133,4 +135,43 @@ func (suite *useCasesSuite) TestUserGetByID() {
 		suite.ErrorIs(err, errs.ErrNotFound)
 		suite.Nil(user)
 	})
+}
+
+func (suite *useCasesSuite) TestUserBalanceHistoryGetByID() {
+	suite.Run("success", func() {
+		ops := []*models.Operation{
+			{
+				ID:          1,
+				UserID:      1,
+				Type:        models.OrderAccrual,
+				Status:      models.StatusNew,
+				Amount:      decimal.NewFromInt(100),
+				Description: "Начисление баллов за заказ 1",
+				CreatedAt:   time.Now(),
+				UpdatedAt:   time.Now(),
+			},
+		}
+		suite.repo.On("UserBalanceHistoryGetByID", mock.Anything, uint64(1)).
+			Return(ops, nil).Once()
+		history, err := suite.useCases.UserBalanceHistoryGetByID(suite.ctx(), uint64(1))
+		suite.NoError(err)
+		suite.Equal(ops, history)
+	})
+
+	suite.Run("no operations", func() {
+		suite.repo.On("UserBalanceHistoryGetByID", mock.Anything, uint64(1)).
+			Return(nil, errs.ErrNotFound).Once()
+		history, err := suite.useCases.UserBalanceHistoryGetByID(suite.ctx(), uint64(1))
+		suite.NoError(err)
+		suite.Nil(history)
+	})
+
+	suite.Run("internal error", func() {
+		suite.repo.On("UserBalanceHistoryGetByID", mock.Anything, uint64(1)).
+			Return(nil, errs.ErrInternal).Once()
+		history, err := suite.useCases.UserBalanceHistoryGetByID(suite.ctx(), uint64(1))
+		suite.ErrorIs(err, errs.ErrInternal)
+		suite.Nil(history)
+	})
+
 }
