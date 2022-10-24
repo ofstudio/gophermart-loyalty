@@ -99,7 +99,7 @@ func (suite *accrualSuite) TestUpdateFailed() {
 
 type accrualSuite struct {
 	suite.Suite
-	accrual     *Accrual
+	accrual     *IntegrationAccrual
 	useCases    *usecases.UseCases
 	repo        *mocks.Repo
 	log         logger.Log
@@ -182,7 +182,7 @@ func (suite *accrualSuite) SetupTest() {
 		PollInterval: testPollInterval,
 		Timeout:      testTimeout,
 	}
-	suite.accrual = NewAccrual(cfg, suite.useCases, suite.log)
+	suite.accrual = NewIntegrationAccrual(cfg, suite.useCases, suite.log)
 }
 
 func (suite *accrualSuite) TearDownTest() {

@@ -53,8 +53,8 @@ func (a *App) Start(ctx context.Context) error {
 	}
 
 	// Запускаем интеграции
-	integrations.NewAccrual(&a.cfg.IntegrationAccrual, useCases, a.log).Start(ctx)
-	integrations.NewShopStub(useCases, a.log).Start(ctx)
+	integrations.NewIntegrationAccrual(&a.cfg.IntegrationAccrual, useCases, a.log).Start(ctx)
+	integrations.NewIntegrationShopStub(useCases, a.log).Start(ctx)
 
 	// Горутина для остановки HTTP-сервера
 	serverStopped := make(chan struct{})

@@ -16,22 +16,22 @@ const (
 	ShopStubRunning
 )
 
-// ShopStub - эмулятор интеграции с магазином в части оплаты заказов баллами.
+// IntegrationShopStub - эмулятор интеграции с магазином в части оплаты заказов баллами.
 // Реализован в качестве демонстрации.
 //
 // Переводит операции по списанию баллов в конечный статус через 1 минуту после создания операции.
 //
 // Операции с номерами заказа, начинающимися с `000`, переводятся в статус CANCELED.
 // Все остальные операции по списанию баллов переводятся в статус PROCESSED.
-type ShopStub struct {
+type IntegrationShopStub struct {
 	status       int
 	useCases     *usecases.UseCases
 	log          logger.Log
 	pollInterval time.Duration
 }
 
-func NewShopStub(u *usecases.UseCases, log logger.Log) *ShopStub {
-	return &ShopStub{
+func NewIntegrationShopStub(u *usecases.UseCases, log logger.Log) *IntegrationShopStub {
+	return &IntegrationShopStub{
 		status:       ShopStubStopped,
 		useCases:     u,
 		log:          log,
@@ -40,18 +40,18 @@ func NewShopStub(u *usecases.UseCases, log logger.Log) *ShopStub {
 }
 
 // Start - запускает эмулятор интеграции с магазином.
-func (s *ShopStub) Start(ctx context.Context) {
+func (s *IntegrationShopStub) Start(ctx context.Context) {
 	go s.poll(ctx)
 	s.status = ShopStubRunning
 }
 
 // Status - возвращает статус эмулятора интеграции с магазином.
-func (s *ShopStub) Status() int {
+func (s *IntegrationShopStub) Status() int {
 	return s.status
 }
 
 // poll - цикл обновления необработанных заказов по списанию баллов
-func (s *ShopStub) poll(ctx context.Context) {
+func (s *IntegrationShopStub) poll(ctx context.Context) {
 	s.log.Info().Msg("shop integration started")
 	for {
 		select {
@@ -66,7 +66,7 @@ func (s *ShopStub) poll(ctx context.Context) {
 }
 
 // updateFurther - запрашивает необработанные операции по списанию баллов и обновляет их статусы
-func (s *ShopStub) updateFurther(ctx context.Context) {
+func (s *IntegrationShopStub) updateFurther(ctx context.Context) {
 	op, err := s.useCases.OperationUpdateFurther(ctx, models.OrderWithdrawal, func(ctx context.Context, op *models.Operation) error {
 		if op.OrderNumber == nil {
 			s.log.Error().Uint64("operation_id", op.ID).Msg("order number is nil")
