@@ -43,7 +43,7 @@ func (h *Handlers) balanceGet(w http.ResponseWriter, r *http.Request) {
 	// Получаем пользователя из контекста
 	userID, ok := h.getUserID(r.Context())
 	if !ok {
-		_ = render.Render(w, r, ErrUnauthorized)
+		_ = render.Render(w, r, errs.ErrResponseUnauthorized)
 		return
 	}
 
@@ -51,10 +51,10 @@ func (h *Handlers) balanceGet(w http.ResponseWriter, r *http.Request) {
 	user, err := h.useCases.UserGetByID(r.Context(), userID)
 	if errors.Is(err, errs.ErrNotFound) {
 		// Если пользователь не найден — возвращаем 500
-		_ = render.Render(w, r, ErrInternal)
+		_ = render.Render(w, r, errs.ErrResponseInternal)
 		return
 	} else if err != nil {
-		_ = render.Render(w, r, NewErrResponse(err))
+		_ = render.Render(w, r, errs.NewErrResponse(err))
 		return
 	}
 
@@ -129,14 +129,14 @@ func (h *Handlers) balanceHistoryGet(w http.ResponseWriter, r *http.Request) {
 	// Получаем пользователя из контекста
 	userID, ok := h.getUserID(r.Context())
 	if !ok {
-		_ = render.Render(w, r, ErrUnauthorized)
+		_ = render.Render(w, r, errs.ErrResponseUnauthorized)
 		return
 	}
 
 	// Запрашиваем историю операций пользователя
 	history, err := h.useCases.BalanceHistoryGetByID(r.Context(), userID)
 	if err != nil {
-		_ = render.Render(w, r, NewErrResponse(err))
+		_ = render.Render(w, r, errs.NewErrResponse(err))
 		return
 	}
 

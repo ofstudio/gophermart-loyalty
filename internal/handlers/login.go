@@ -6,6 +6,8 @@ import (
 
 	"github.com/go-chi/render"
 	"github.com/golang-jwt/jwt/v4"
+
+	"gophermart-loyalty/internal/errs"
 )
 
 type LoginRequest struct {
@@ -56,7 +58,7 @@ func (h *Handlers) login(w http.ResponseWriter, r *http.Request) {
 	data := &LoginRequest{}
 	if err := render.Bind(r, data); err != nil {
 		h.log.Debug().Err(err).Msg("failed to bind request")
-		_ = render.Render(w, r, ErrBadRequest)
+		_ = render.Render(w, r, errs.ErrResponseBadRequest)
 		return
 	}
 
@@ -64,7 +66,7 @@ func (h *Handlers) login(w http.ResponseWriter, r *http.Request) {
 	user, err := h.useCases.UserCheckLoginPass(r.Context(), data.Login, data.Password)
 	if err != nil {
 		h.log.Debug().Err(err).Msg("failed to check login and password")
-		_ = render.Render(w, r, NewErrResponse(err))
+		_ = render.Render(w, r, errs.NewErrResponse(err))
 		return
 	}
 
@@ -72,7 +74,7 @@ func (h *Handlers) login(w http.ResponseWriter, r *http.Request) {
 	token, err := h.generateJWTToken(user.ID)
 	if err != nil {
 		h.log.Debug().Err(err).Msg("failed to generate token")
-		_ = render.Render(w, r, ErrInternal)
+		_ = render.Render(w, r, errs.ErrResponseInternal)
 		return
 	}
 

@@ -1,18 +1,16 @@
-package handlers
+package errs
 
 import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
-
-	"gophermart-loyalty/internal/errs"
 )
 
 var (
-	ErrInternal     = NewErrResponse(errs.ErrInternal)
-	ErrBadRequest   = NewErrResponse(errs.ErrBadRequest)
-	ErrUnauthorized = NewErrResponse(errs.ErrUnauthorized)
+	ErrResponseInternal     = NewErrResponse(ErrInternal)
+	ErrResponseBadRequest   = NewErrResponse(ErrBadRequest)
+	ErrResponseUnauthorized = NewErrResponse(ErrUnauthorized)
 )
 
 // ErrResponse - render.Renderer для ответов с ошибками.
@@ -33,9 +31,9 @@ type ErrResponse struct {
 }
 
 func NewErrResponse(err error) render.Renderer {
-	appErr, ok := err.(*errs.Error)
+	appErr, ok := err.(*Error)
 	if !ok {
-		appErr = errs.ErrInternal
+		appErr = ErrInternal
 	}
 	return &ErrResponse{
 		HTTPCode: appErr.HTTPCode,

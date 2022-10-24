@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
+
+	"gophermart-loyalty/internal/errs"
 )
 
 type RegisterRequest struct {
@@ -43,13 +45,13 @@ func (req *RegisterRequest) Bind(_ *http.Request) error {
 func (h *Handlers) register(w http.ResponseWriter, r *http.Request) {
 	data := &RegisterRequest{}
 	if err := render.Bind(r, data); err != nil {
-		_ = render.Render(w, r, ErrBadRequest)
+		_ = render.Render(w, r, errs.ErrResponseBadRequest)
 		return
 	}
 
 	user, err := h.useCases.UserCreate(r.Context(), data.Login, data.Password)
 	if err != nil {
-		_ = render.Render(w, r, NewErrResponse(err))
+		_ = render.Render(w, r, errs.NewErrResponse(err))
 		return
 	}
 
@@ -57,7 +59,7 @@ func (h *Handlers) register(w http.ResponseWriter, r *http.Request) {
 	token, err := h.generateJWTToken(user.ID)
 	if err != nil {
 		h.log.Debug().Err(err).Msg("failed to generate token")
-		_ = render.Render(w, r, ErrInternal)
+		_ = render.Render(w, r, errs.ErrResponseInternal)
 		return
 	}
 

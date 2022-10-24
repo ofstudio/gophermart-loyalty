@@ -31,21 +31,21 @@ func (h *Handlers) orderAccrualCreate(w http.ResponseWriter, r *http.Request) {
 	// Получаем пользователя из контекста
 	userID, ok := h.getUserID(r.Context())
 	if !ok {
-		_ = render.Render(w, r, ErrUnauthorized)
+		_ = render.Render(w, r, errs.ErrResponseUnauthorized)
 		return
 	}
 
 	// Получаем номер заказа из запроса
 	orderNumber, err := decodePlainText(r)
 	if err != nil {
-		_ = render.Render(w, r, NewErrResponse(err))
+		_ = render.Render(w, r, errs.NewErrResponse(err))
 		return
 	}
 
 	// Создаем модель операции
 	op, err := h.useCases.OrderAccrualPrepare(r.Context(), userID, orderNumber)
 	if err != nil {
-		_ = render.Render(w, r, NewErrResponse(err))
+		_ = render.Render(w, r, errs.NewErrResponse(err))
 		return
 	}
 	// Сохраняем операцию
@@ -56,7 +56,7 @@ func (h *Handlers) orderAccrualCreate(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		return
 	} else if err != nil {
-		_ = render.Render(w, r, NewErrResponse(err))
+		_ = render.Render(w, r, errs.NewErrResponse(err))
 		return
 	}
 	w.WriteHeader(http.StatusAccepted)
@@ -94,27 +94,27 @@ func (h *Handlers) orderWithdrawalCreate(w http.ResponseWriter, r *http.Request)
 	// Получаем пользователя из контекста
 	userID, ok := h.getUserID(r.Context())
 	if !ok {
-		_ = render.Render(w, r, ErrUnauthorized)
+		_ = render.Render(w, r, errs.ErrResponseUnauthorized)
 		return
 	}
 
 	// Получаем данные из запроса
 	data := &OrderWithdrawalCreateRequest{}
 	if err := render.Bind(r, data); err != nil {
-		_ = render.Render(w, r, ErrBadRequest)
+		_ = render.Render(w, r, errs.ErrResponseBadRequest)
 		return
 	}
 
 	// Создаем модель операции
 	op, err := h.useCases.OrderWithdrawalPrepare(r.Context(), userID, data.OrderNumber, data.Amount)
 	if err != nil {
-		_ = render.Render(w, r, NewErrResponse(err))
+		_ = render.Render(w, r, errs.NewErrResponse(err))
 		return
 	}
 
 	// Сохраняем операцию
 	if err = h.useCases.OperationCreate(r.Context(), op); err != nil {
-		_ = render.Render(w, r, NewErrResponse(err))
+		_ = render.Render(w, r, errs.NewErrResponse(err))
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -137,27 +137,27 @@ func (h *Handlers) promoAccrualCreate(w http.ResponseWriter, r *http.Request) {
 	// Получаем пользователя из контекста
 	userID, ok := h.getUserID(r.Context())
 	if !ok {
-		_ = render.Render(w, r, ErrUnauthorized)
+		_ = render.Render(w, r, errs.ErrResponseUnauthorized)
 		return
 	}
 
 	// Получаем промо-код из запроса
 	promoCode, err := decodePlainText(r)
 	if err != nil {
-		_ = render.Render(w, r, NewErrResponse(err))
+		_ = render.Render(w, r, errs.NewErrResponse(err))
 		return
 	}
 
 	// Создаем модель операции
 	op, err := h.useCases.PromoAccrualPrepare(r.Context(), userID, promoCode)
 	if err != nil {
-		_ = render.Render(w, r, NewErrResponse(err))
+		_ = render.Render(w, r, errs.NewErrResponse(err))
 		return
 	}
 
 	// Сохраняем операцию
 	if err = h.useCases.OperationCreate(r.Context(), op); err != nil {
-		_ = render.Render(w, r, NewErrResponse(err))
+		_ = render.Render(w, r, errs.NewErrResponse(err))
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -224,14 +224,14 @@ func (h *Handlers) orderAccrualList(w http.ResponseWriter, r *http.Request) {
 	// Получаем пользователя из контекста
 	userID, ok := h.getUserID(r.Context())
 	if !ok {
-		_ = render.Render(w, r, ErrUnauthorized)
+		_ = render.Render(w, r, errs.ErrResponseUnauthorized)
 		return
 	}
 
 	// получаем список операций начисления бонусов
 	operations, err := h.useCases.OperationGetByType(r.Context(), userID, models.OrderAccrual)
 	if err != nil {
-		_ = render.Render(w, r, NewErrResponse(err))
+		_ = render.Render(w, r, errs.NewErrResponse(err))
 		return
 	}
 
@@ -295,14 +295,14 @@ func (h *Handlers) orderWithdrawalList(w http.ResponseWriter, r *http.Request) {
 	// Получаем пользователя из контекста
 	userID, ok := h.getUserID(r.Context())
 	if !ok {
-		_ = render.Render(w, r, ErrUnauthorized)
+		_ = render.Render(w, r, errs.ErrResponseUnauthorized)
 		return
 	}
 
 	// Получаем список операций
 	ops, err := h.useCases.OperationGetByType(r.Context(), userID, models.OrderWithdrawal)
 	if err != nil {
-		_ = render.Render(w, r, NewErrResponse(err))
+		_ = render.Render(w, r, errs.NewErrResponse(err))
 		return
 	}
 

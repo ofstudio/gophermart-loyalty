@@ -8,6 +8,8 @@ import (
 	"github.com/go-chi/render"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/golang-jwt/jwt/v4/request"
+
+	"gophermart-loyalty/internal/errs"
 )
 
 // authMiddleware - middleware для проверки авторизации.
@@ -22,7 +24,7 @@ func (h *Handlers) authMiddleware(next http.Handler) http.Handler {
 		userID, err := h.extractUserID(r)
 		if err != nil {
 			h.log.Debug().Err(err).Msg("failed to extract user ID")
-			_ = render.Render(w, r, ErrUnauthorized)
+			_ = render.Render(w, r, errs.ErrResponseUnauthorized)
 			return
 		}
 
