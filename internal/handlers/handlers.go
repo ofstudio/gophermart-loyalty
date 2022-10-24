@@ -37,7 +37,7 @@ func NewHandlers(c *config.Auth, u *usecases.UseCases, log logger.Log) *Handlers
 	}
 }
 
-func (h *Handlers) Routes() chi.Router {
+func (h *Handlers) InitRoutes() chi.Router {
 	r := chi.NewRouter()
 	r.Post("/register", h.register)
 	r.Post("/login", h.login)

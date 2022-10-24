@@ -46,7 +46,7 @@ func (a *App) Start(ctx context.Context) error {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Mount("/api/user", h.Routes())
+	r.Mount("/api/user", h.InitRoutes())
 	a.server = &http.Server{
 		Addr:    a.cfg.RunAddress,
 		Handler: r,

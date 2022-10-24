@@ -48,7 +48,7 @@ func (suite *handlersSuite) SetupTest() {
 	suite.repo = mocks.NewRepo(suite.T())
 	suite.useCases = usecases.NewUseCases(suite.repo, suite.log)
 	suite.handlers = NewHandlers(suite.cfg, suite.useCases, suite.log)
-	r := suite.handlers.Routes()
+	r := suite.handlers.InitRoutes()
 
 	suite.testServer = httptest.NewServer(r)
 }
