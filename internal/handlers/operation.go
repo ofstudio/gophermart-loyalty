@@ -54,7 +54,8 @@ func (h *Handlers) orderAccrualCreate(w http.ResponseWriter, r *http.Request) {
 		// то возвращаем 200 ОК
 		w.WriteHeader(http.StatusOK)
 		return
-	} else if err != nil {
+	}
+	if err != nil {
 		_ = render.Render(w, r, errs.NewErrResponse(err))
 		return
 	}

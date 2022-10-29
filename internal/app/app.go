@@ -16,6 +16,9 @@ import (
 	"gophermart-loyalty/internal/usecases"
 )
 
+// stopTimeout - таймаут остановки приложения
+const stopTimeout = 5 * time.Second
+
 // App - приложение
 type App struct {
 	cfg    *config.Config
@@ -82,7 +85,7 @@ func (a *App) Start(ctx context.Context) error {
 
 // stopServer - остановка HTTP-сервера
 func (a *App) stopServer() {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), stopTimeout)
 	defer cancel()
 	if err := a.server.Shutdown(ctx); err != nil {
 		a.log.Error().Err(err).Msg("server shutdown error")

@@ -87,7 +87,8 @@ func (s *IntegrationShopStub) updateFurther(ctx context.Context) {
 	if err == errs.ErrNotFound {
 		s.log.Debug().Msg("withdrawal operation: nothing to update")
 		return
-	} else if err != nil {
+	}
+	if err != nil {
 		s.log.Error().Err(err).Msg("withdrawal operation update failed")
 		return
 	}

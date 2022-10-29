@@ -83,10 +83,11 @@ func (a *IntegrationAccrual) poll(ctx context.Context) {
 // updateFurther - запрашивает необработанные операции по начислению баллов и обновляет их статусы
 func (a *IntegrationAccrual) updateFurther(ctx context.Context) error {
 	op, err := a.useCases.OperationUpdateFurther(ctx, models.OrderAccrual, a.updateCallback)
-	if err == errs.ErrNotFound {
+	if errors.Is(err, errs.ErrNotFound) {
 		a.log.Debug().Msg("accrual operation: nothing to update")
 		return nil
-	} else if err != nil {
+	}
+	if err != nil {
 		a.log.Error().Err(err).Msg("accrual operation update failed")
 		return err
 	}
@@ -107,7 +108,8 @@ func (a *IntegrationAccrual) updateCallback(ctx context.Context, op *models.Oper
 		// Если получили ошибку TooManyRequests, то обновляем тайминги
 		a.adjustPollTiming(err.RetryAfter, err.MaxRPM)
 		return errs.ErrIntegrationTooManyRequests
-	} else if err != nil {
+	}
+	if err != nil {
 		a.log.Error().Uint64("operation_id", op.ID).Err(err).Msg("accrual operation request failed")
 		return errs.ErrIntegrationRequestFailed
 	}

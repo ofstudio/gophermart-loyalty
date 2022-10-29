@@ -43,7 +43,8 @@ func (h *Handlers) balanceGet(w http.ResponseWriter, r *http.Request) {
 		// Если пользователь не найден — возвращаем 500
 		_ = render.Render(w, r, errs.ErrResponseInternal)
 		return
-	} else if err != nil {
+	}
+	if err != nil {
 		_ = render.Render(w, r, errs.NewErrResponse(err))
 		return
 	}

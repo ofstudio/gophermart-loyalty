@@ -28,8 +28,7 @@ func main() {
 
 	// Запускаем приложение
 	application := app.NewApp(cfg, log)
-	err = application.Start(ctx)
-	if err != nil {
+	if err = application.Start(ctx); err != nil {
 		log.Fatal().Err(err).Msg("error while starting application")
 	}
 
