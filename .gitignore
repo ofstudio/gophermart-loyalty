@@ -21,3 +21,9 @@ vendor/
 # IDEs directories
 .idea
 .vscode
+
+# test-data directory
+testdata
+
+# Environment variables
+.env

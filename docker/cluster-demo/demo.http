@@ -1,0 +1,154 @@
+########
+# 1. Регистрируем пользователя, получаем авторизационный токен
+#
+POST http://localhost/api/user/register
+Content-Type: application/json
+
+{
+  "login": "oleg",
+  "password": "123456789"
+}
+
+> {% client.global.set("access_token", response.body.access_token); %}
+
+########
+# 2. Создаем запросы на начисление баллов
+# Номера заказов:
+# 01008, 01016, 01024, 01032, 01040, 01057, 01065, 01073, 01081, 01099
+# (https://simplycalc.com/luhn-calculate.php)
+POST http://localhost/api/user/orders
+Authorization: Bearer {{access_token}}
+Content-Type: text/plain
+
+01008
+
+####
+POST http://localhost/api/user/orders
+Authorization: Bearer {{access_token}}
+Content-Type: text/plain
+
+01016
+
+
+####
+POST http://localhost/api/user/orders
+Authorization: Bearer {{access_token}}
+Content-Type: text/plain
+
+01024
+
+####
+POST http://localhost/api/user/orders
+Authorization: Bearer {{access_token}}
+Content-Type: text/plain
+
+01032
+
+####
+POST http://localhost/api/user/orders
+Authorization: Bearer {{access_token}}
+Content-Type: text/plain
+
+01040
+
+####
+POST http://localhost/api/user/orders
+Authorization: Bearer {{access_token}}
+Content-Type: text/plain
+
+01057
+
+####
+POST http://localhost/api/user/orders
+Authorization: Bearer {{access_token}}
+Content-Type: text/plain
+
+01065
+
+####
+POST http://localhost/api/user/orders
+Authorization: Bearer {{access_token}}
+Content-Type: text/plain
+
+01073
+
+####
+POST http://localhost/api/user/orders
+Authorization: Bearer {{access_token}}
+Content-Type: text/plain
+
+01081
+
+####
+POST http://localhost/api/user/orders
+Authorization: Bearer {{access_token}}
+Content-Type: text/plain
+
+01099
+
+########
+# 3. Проверяем, что баллы начислились
+GET http://localhost/api/user/balance
+Authorization: Bearer {{access_token}}
+
+########
+# 4. Создаем запросы на списание баллов
+# Номера заказов:
+# 02006, 02014, 0002022
+POST http://localhost/api/user/balance/withdraw
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{"order": "02006", "sum": 10}
+
+####
+POST http://localhost/api/user/balance/withdraw
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{"order": "02014", "sum": 500}
+
+####
+POST http://localhost/api/user/balance/withdraw
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{"order": "0002022", "sum": 5}
+
+####
+POST http://localhost/api/user/balance/withdraw
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{"order": "001065", "sum": 5}
+
+########
+# 5. Смотрим статус начисления баллов
+GET http://localhost/api/user/orders
+Authorization: Bearer {{access_token}}
+
+########
+# 6. Смотрим статус списания баллов
+GET http://localhost/api/user/withdrawals
+Authorization: Bearer {{access_token}}
+
+########
+# 7. Смотрим историю операций
+GET http://localhost/api/user/balance/history
+Authorization: Bearer {{access_token}}
+
+########
+# 8. Вводим действующий промо-код
+POST http://localhost/api/user/promos
+Authorization: Bearer {{access_token}}
+Content-Type: text/plain
+
+WELCOME-GOPHER
+
+########
+# 9. Вводим истекший промо-код
+POST http://localhost/api/user/promos
+Authorization: Bearer {{access_token}}
+Content-Type: text/plain
+
+GOLANG-2021
