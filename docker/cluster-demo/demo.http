@@ -87,7 +87,7 @@ Content-Type: text/plain
 01099
 
 ########
-# 3. Проверяем, что баллы начислились
+# 3. Проверяем баланс
 GET http://localhost/api/user/balance
 Authorization: Bearer {{access_token}}
 
@@ -109,6 +109,8 @@ Content-Type: application/json
 {"order": "02014", "sum": 500}
 
 ####
+# Номер заказа начинается с 000, поэтому заказ будет отменен через минуту
+# и баллы за него будут возвращены на счет
 POST http://localhost/api/user/balance/withdraw
 Authorization: Bearer {{access_token}}
 Content-Type: application/json
